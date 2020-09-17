@@ -57,7 +57,7 @@
 
    5. 插入一些数据，能查询到对应的ip
 
-```
+```c
 		#include <QtCore/QCoreApplication>
 		#include "Qdbc\Qdbc.h"
 		int main(int argc, char *argv[])
@@ -181,7 +181,7 @@ void transactionaltest()
 
  	**此方法为测试Qswitch功能，此返回的是**
 
-```
+```c
 		void switchtest()
 		{
 			Laneip* lane;
@@ -200,7 +200,7 @@ void transactionaltest()
 ```
 **此方法为测试Qforeach功能,此返回是list类型**
 
-```
+```c
 		void QHello::foreachtest()
 		{
 			qDebug() << "QHello::selectAl start";
@@ -216,7 +216,7 @@ void transactionaltest()
 
 1. 假设定义的类型为Laneip,想将类映射到数据库，那就要将类定义成如下格式：
 
-```
+```c
 		class Laneip :public QObject
 		{
 			Q_OBJECT
@@ -270,8 +270,8 @@ Qselect(sql) < 3 > lane;
 
 ​	3 . 输入与输出
 
-```c
-假设orm定义的类为T,对于输入（<） 而言，只能为T，对于输出而言，可以为T，或者Qlist<T*>类型，*T。
+```c++
+假设orm定义的类为T,对于输入（<） 而言，只能为T，对于输出而言，可以为T，或者 Qlist<T*> 类型，*T。
 ```
 
 ​	我们以Laneip的定义类来举例,详见如下表格。而对于指针类型，直接用NULL进行判断，而对于直接定义的类型，需要用	Object_utils::isNULL 进行判断
@@ -286,22 +286,26 @@ Qselect(sql) < 3 > lane;
 
 Object_utils 此类将有三个静态成员函数分别为：
 
-					- static QString toString(T* src)   
-					- static QString toString(QList<T*>& value)	*
-					- *static void copy(T* src,T* dec) 
-					- static void clear(T& data)
-					- static void clear(T* & data)
-					- static bool isNULL(T& data)
-					- static bool isClear(T& data)																				
+```c
+				- static QString toString(T* src)   
+				- static QString toString(QList<T*>& value)	*
+				- static void copy(T* src,T* dec) 
+				- static void clear(T& data)
+				- static void clear(T* & data)
+				- static bool isNULL(T& data)
+				- static bool isClear(T& data)																				
+```
 
 1. 对于static QString toString(T* src)   )静态成员函数而言，返回的是定义orm类字符串格式化的内容,以"["开头，“]”结尾，中间为类成员咱开。
 
 ​		此内容大致为:"[ id:3 ip:192.168.1.100 port:100 url:https://github.com/linuxguangbo/ entryno:111 etype:1 Status:1 description:正常 updatetime:2020-09-08T17:33:55 ]"
 
-	       		Laneip* lane;
-	            QString sql = "SELECT * FROM laneip where id = 2";
-	            Qselect(sql)  > lane;
-	            qDebug() << Object_utils::toString(lane);
+```c
+       		Laneip* lane;
+            QString sql = "SELECT * FROM laneip where id = 2";
+            Qselect(sql)  > lane;
+            qDebug() << Object_utils::toString(lane);
+```
 2. 对于static QString toString(T* src)   )静态成员函数而言，返回的是定义orm的QList类字符串格式化的内容，以"["开头，“]”结尾，中间为类成员咱开，如果有多个类成员，则以&分割。
 
 ​			此内容大致为:"[ id:1 ip:127.0.0.1 port:5009 url:www.sohu.com entryno:101 etype:0 Status:2 description:网络异常,连接超时 updatetime:2020-04-30T16:54:29  && id:2 ip:192.168.1.104 port:5010 url:www.baidu.com entryno:102 etype:0 Status:1 description:网络异 常,连接超时! updatetime:2020-09-16T11:23:23  && id:3 ip:192.168.1.100 port:100 url:https://github.com/linuxguangbo/ entryno:111 etype:1 Status:1 description:正常 updatetime:2020-09-08T17:33:55  && id:5 ip:192.168.1.112 port:100 url:www.google.com entryno:111 etype:1 Status:1 description:正常 updatetime:2020-04-30T17:24:19  && id:6 ip:192.168.1.112 port:1144 url:www.google.com entryno:2 etype:2 Status:1 description:网络正常 updatetime:2020-09-08T17:24:47  && ]"

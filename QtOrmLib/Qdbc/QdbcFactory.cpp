@@ -1,6 +1,6 @@
-#include "QdbcFactory.h"
-#include "Datebase_pool_tmeplate.h"
-#include "Database_operator_template.h"
+#include "../include/QdbcFactory.h"
+#include "../include/Datebase_pool_tmeplate.h"
+#include "../include/Database_operator_template.h"
 IDatabase* QdbcFactory::createDataSource(int id)
 {
 	IDatabase * iDatabase = NULL;

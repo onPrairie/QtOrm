@@ -1,8 +1,8 @@
-#include "analysis_container.h"
+#include "../include/analysis_container.h"
 #include <QMetaMethod>
 #include <QStringBuilder>
 #include <QDateTime>
-#include "Object_qdbc.h"
+#include "../include/Object_qdbc.h"
 QString Analysis_container::getif(bool t,int arg, char* p)
 {
 	if (arg == 3) {

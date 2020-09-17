@@ -1,4 +1,4 @@
-#include "Database_operator_template.h"
+#include "../include/Database_operator_template.h"
 #include <QSettings>
 #include <QDebug>
 #include<QSqlError>

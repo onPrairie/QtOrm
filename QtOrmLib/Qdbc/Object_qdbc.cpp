@@ -1,4 +1,4 @@
-#include "Object_qdbc.h"
+#include "../include/Object_qdbc.h"
 #include <QDebug>
 #include <QTime>
 #include <QSettings>

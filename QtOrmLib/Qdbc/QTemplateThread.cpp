@@ -1,4 +1,4 @@
-#include "QTemplateThread.h"
+#include "../include/QTemplateThread.h"
 #include <QDebug>
 #include <QSettings>
 #include <QThread>
@@ -7,7 +7,8 @@
 #include <QDateTime>
 #include <QStringBuilder>
 #include <QSqlRecord>
-#include "QdbcFactory.h"
+#include "../include/QdbcFactory.h"
+#include "../include/Object_qdbc.h"
 #ifdef WIN32  
 #pragma execution_character_set("utf-8")  
 #endif
@@ -95,7 +96,6 @@ void QTmeplate::close_connect(QSqlDatabase * db,const QString& errcoe)
 	}*/
 	
 }
-#include "Object_qdbc.h"
 void QTmeplate::do_sql(QVariantList m_data, int falg)
 {
 	

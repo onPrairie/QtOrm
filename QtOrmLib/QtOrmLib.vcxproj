@@ -77,9 +77,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="analysis_container.cpp" />
-    <ClCompile Include="Database_operator_template.cpp" />
-    <ClCompile Include="Datebase_pool_tmeplate.cpp" />
     <ClCompile Include="GeneratedFiles\Debug\moc_Datebase_pool_tmeplate.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -110,10 +107,13 @@
     <ClCompile Include="GeneratedFiles\Release\moc_QTemplateThread.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="IDatabase.cpp" />
-    <ClCompile Include="Object_qdbc.cpp" />
-    <ClCompile Include="QdbcFactory.cpp" />
-    <ClCompile Include="QTemplateThread.cpp" />
+    <ClCompile Include="Qdbc\analysis_container.cpp" />
+    <ClCompile Include="Qdbc\Database_operator_template.cpp" />
+    <ClCompile Include="Qdbc\Datebase_pool_tmeplate.cpp" />
+    <ClCompile Include="Qdbc\IDatabase.cpp" />
+    <ClCompile Include="Qdbc\Object_qdbc.cpp" />
+    <ClCompile Include="Qdbc\QdbcFactory.cpp" />
+    <ClCompile Include="Qdbc\QTemplateThread.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\analysis_container.h" />

@@ -363,9 +363,11 @@ Object_utils 此类将有三个静态成员函数分别为：
 
 ​	希望大家提供大量的测试案列，此版暂定为测试版本，谢谢大家支持。如有bug，请在Issues中提问，或者联系邮箱1104559085@qq.com  。
 
-​	Qdbc源码地址： https://github.com/linuxguangbo/Qt-Orm 
+​	Qdbc源码地址： https://github.com/linuxguangbo/QtOrm  
 
 ​	Qdbc测试地址： https://github.com/linuxguangbo/Qt-Orm-test 
+
+​	说明： 测试库(Qt-Orm-test )放置测试代码，源码库（QtOrm  ）不放置测试代码
 
 ​	如果想修修改代码，或用于其他用途，请带有Qdbc.h中的注释。另遵守Apache License 2.0协议。当前版更行到**20.09.011**
 ​	

@@ -112,8 +112,11 @@ private:
 class Object_qdbc {
 	;
 };
+/*当前的一下配置信息*/
 static int atom;
 static QMutex __mutex;
+static QString fliepath;	
+static QString filename;
 class QTORMLIB_EXPORT QdbcTemplate : public QObject
 {
 	Q_OBJECT

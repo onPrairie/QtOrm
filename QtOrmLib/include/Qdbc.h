@@ -80,6 +80,11 @@ public:	\
 //当前所支持的数据库
 #define  Qcurrentdatebase (QMysql)
 
+#define Qconfig(path,name)  \
+	do {	fliepath = QString(name);	\
+			filename = QString(path);	\
+		} while (0)
+
 #define  Hint 0
 #if Hiint
 	// T* 为指针类型，需要继承于Qobject并且使用Q_ATTR或者Q_ATTR_ALIAS宏定义的属性， 返回格式化字符串

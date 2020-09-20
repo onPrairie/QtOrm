@@ -17,16 +17,19 @@ int QTmeplate::loglevel;
 QTmeplate::QTmeplate(QObject *parent)
 	: QObject(parent)
 {
+
+
 }
 
 QTmeplate::~QTmeplate()
 {
 }
 
-bool QTmeplate::read_date(db_struct& db)
+bool QTmeplate::read_date(db_struct& db,const QString& path)
 {
-	QSettings *ini = new QSettings("qjbctemplate.ini", QSettings::IniFormat);
+	mysettings *ini = new mysettings(path, QSettings::IniFormat);
 	loglevel = ini->value("TEMPLATE/Loglevel", 0).toInt();
+	db.querystring =  ini->getchildrensfromgrop("pool");
 	QStringList ls = ini->childGroups();
 	bool flag = false;
 	for (int i = 0; i < ls.size();i++)
@@ -104,14 +107,15 @@ void QTmeplate::do_sql(QVariantList m_data, int falg)
 	case  0:
 	{
 		if (this->QDBC_id == "QDBC_1") {
+			QString fullpath = m_data[0].toString();
 			db_struct db;
-			bool s = read_date(db);
+			bool s = read_date(db, fullpath);
 			if (loglevel != 0) qInfo() << "[QDBC]" << "准备sql语句以及初始化";
 			if (s == false) {
 				qFatal("[error:] 读取参数失败");
 			}
 			QString options = "MYSQL_OPT_CONNECT_TIMEOUT=" % db.timeout;
-			bool b = QdbcFactory::createDataSource(qdbc_mod)->LoadDatabase(db.dbdriver, db.ip, db.dbName, db.port, db.userName, db.passWord, options);
+			bool b = QdbcFactory::createDataSource(qdbc_mod)->LoadDatabase(db.dbdriver, db.ip, db.dbName, db.port, db.userName, db.passWord, options,db.querystring);
 			if (b == false) {
 				QMap<int, QVariantList>  map_data;
 				do_result(map_data, b, 8);
@@ -422,4 +426,40 @@ void QTmeplate::detection_drive(QSqlDatabase * database)
 	}
 	qInfo() << "end detection drive=========================》";
 	
+}
+
+mysettings::mysettings(const QString & fileName, Format format) :QSettings(fileName, format, Q_NULLPTR)
+{
+		
+}
+
+QString mysettings::getchildrensfromgrop(const QString group)
+{
+	QString  name =  this->fileName();
+	QFile file(name);
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+		return "";
+	}
+	QString querystring;
+	while (!file.atEnd()) {
+		QByteArray line = file.readLine().trimmed();
+		if (line == "[pool]") {
+			while (!file.atEnd())
+			{
+				line = file.readLine().trimmed();
+				if (line[0] == '[') {
+					break;
+				}
+				if (line.indexOf("=") > 0) {
+					querystring.append(line);
+					querystring.append("&");
+				}
+				
+
+			}
+			break;
+		}
+	}
+
+	return querystring;
 }

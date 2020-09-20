@@ -67,10 +67,12 @@ public:	\
 
 #define  QDBC_Id QdbcTemplate::singleinstance()->getselfthread()->get_QDBC_id()
 
+#define QMajor_version "20.09"
+#define Qminor_version "012"
 #define Qstable   "s"
 #define Qtest     "c"
 
-#define  Qversion "20.09.011"##(Qtest)
+#define  Qversion QMajor_version "." Qminor_version  Qtest
 
 #define  QMysql "QMYSQL"
 #define  QOracle "QOCI"
@@ -80,11 +82,11 @@ public:	\
 //当前所支持的数据库
 #define  Qcurrentdatebase (QMysql)
 
-#define Qconfig(path,name)  \
-	do {	fliepath = QString(name);	\
-			filename = QString(path);	\
-		} while (0)
-
+#define QconfigPath(path,name)  do \
+	{	\
+	Qconfig t;  \
+	t.setPath(path,name); \
+}while (0) 
 #define  Hint 0
 #if Hiint
 	// T* 为指针类型，需要继承于Qobject并且使用Q_ATTR或者Q_ATTR_ALIAS宏定义的属性， 返回格式化字符串

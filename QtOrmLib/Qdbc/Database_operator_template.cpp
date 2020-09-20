@@ -16,7 +16,7 @@ Database_operator_template::~Database_operator_template()
 {
 }
 
-bool Database_operator_template::LoadDatabase(const QString& db, const QString& host, const QString& dbname, int port, const QString& username, const QString& password, const QString& options)
+bool Database_operator_template::LoadDatabase(const QString& db, const QString& host, const QString& dbname, int port, const QString& username, const QString& password, const QString& options,const QString& parms)
 {
 	//simpleTelnet(host,port,1000);
 	bool flag = true;

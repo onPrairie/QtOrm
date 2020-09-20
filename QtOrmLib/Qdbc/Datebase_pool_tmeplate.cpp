@@ -16,16 +16,28 @@ Datebase_pool_tmeplate::Datebase_pool_tmeplate(QObject *parent)
 	//}
 }
 
-bool Datebase_pool_tmeplate::LoadDatabase(const QString& db, const QString& host, const QString& dbname, int port, const QString& username, const QString& password, const QString& options)
+bool Datebase_pool_tmeplate::LoadDatabase(const QString& db, const QString& host, const QString& dbname, int port, const QString& username, const QString& password, const QString& options, const QString& parms)
 {
-	QSettings *ini = new QSettings("qjbctemplate.ini", QSettings::IniFormat);
-	int initialPoolSize = ini->value("pool/initialPoolSize", 1).toInt();
-	delete ini;
+	//QSettings *ini = new QSettings("qjbctemplate.ini", QSettings::IniFormat);
+	//int initialPoolSize = ini->value("pool/initialPoolSize", 1).toInt();
+	//delete ini;
 	bool flag = true;
 
+	QString initialPoolSize = "initialPoolSize=";
+	QStringList Poollist = parms.split("&");
+	bool t = false;
+	for (int i = 0; i < Poollist.size(); i++) {
+		if (Poollist[i].indexOf(initialPoolSize) == 0) {
+			initialPoolSize  = Poollist[i].right(Poollist[i].size() - initialPoolSize.size());
+			t = true;
+		}
+	}
+	if (t == false) {
+		qFatal("not find pool/initialPoolSize");
+	}
 	//¼ÓËø
 	_mutex.lock();
-	for (int i = 0; i < initialPoolSize; i++) {
+	for (int i = 0; i < initialPoolSize.toInt(); i++) {
 		QSqlDatabase* dbDataMysql = new QSqlDatabase;
 		if ((!dbDataMysql->isOpen())) {
 			*dbDataMysql = QSqlDatabase::addDatabase("QMYSQL","template" + QString::number(i));///////////////
@@ -44,7 +56,7 @@ bool Datebase_pool_tmeplate::LoadDatabase(const QString& db, const QString& host
 		}
 	}
 	_mutex.unlock();
-	for (int i = 0; i < initialPoolSize; i++) {
+	for (int i = 0; i < initialPoolSize.toInt(); i++) {
 		if (!db_g[i]->open()) {
 			flag = false;
 			qInfo() << "[QDBC:]" << db_g[i]->lastError().number() << ":" << db_g[i]->lastError().text();

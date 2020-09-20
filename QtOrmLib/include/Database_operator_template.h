@@ -16,7 +16,7 @@ public:
 
 	QSqlDatabase* db_g = NULL;
 	virtual bool LoadDatabase(const QString& db, const QString& host, const QString& dbname, int port,
-		const QString& username, const QString& password, const QString& options) override;
+		const QString& username, const QString& password, const QString& options, const QString& parms) override;
 	virtual QSqlDatabase* openConnection() override;
 
 

@@ -9,6 +9,7 @@
 #include <QMutex>
 #include <QStringBuilder>
 #include <QMetaMethod>
+#include <QFileInfo>
 #include "analysis_container.h"
 #include "qtormlib_global.h"
 #ifdef WIN32  
@@ -109,14 +110,17 @@ public:
 private:
 
 };
-class Object_qdbc {
-	;
+class QTORMLIB_EXPORT Qconfig {
+public:
+	void setPath(char* path, char* name);
+	bool fullfilepath(QString& path);
 };
 /*当前的一下配置信息*/
 static int atom;
 static QMutex __mutex;
-static QString fliepath;	
-static QString filename;
+static char* fliepath;
+static char* filename;
+
 class QTORMLIB_EXPORT QdbcTemplate : public QObject
 {
 	Q_OBJECT
@@ -138,7 +142,8 @@ private:
 	//int timeout = 4;
 	QTmeplate* mythread;
 	Analysis_container* analysis = NULL;
-
+	
+	
 
 	void clear() {
 		this->In_count =  0;
@@ -232,6 +237,9 @@ public:
 	void thread_dispatch_flag4();
 
 	QMap<int,void*> adress;
+
+	/****c code****/
+	
 
 	template <typename T>
 	T* New_adress() {

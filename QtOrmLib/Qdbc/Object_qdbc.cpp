@@ -4,7 +4,31 @@
 #include <QSettings>
 #include <QMetaType>
 #include <QMetaProperty>
+#include "../include/Qdbc.h"
 QMap<int, QdbcTemplate*> QdbcTemplate::__instance__;
+QdbcTemplate::QdbcTemplate(QObject *parent)
+	: QObject(parent)
+{
+	Qconfig config;
+	QString path;
+	bool b =config.fullfilepath(path);
+	if (b == false) {
+		this->assert_args("can not find this config file");
+	}
+	int a = ++atom;
+	//暂时不使用线程处理，虽然此处看起来位线程
+	//fullfilepath(Qconfig::filename, Qconfig::fliepath);
+	mythread = new QTmeplate(this);
+	QSettings *ini = new QSettings(path, QSettings::IniFormat);
+	Loglevel = ini->value("TEMPLATE/Loglevel", 0).toInt();
+	ini->setValue("TEMPLATE/Loglevel", QString(Qversion));
+	delete ini;
+
+	mythread->QDBC_id = "QDBC_" % QString::number(a);
+	QVariantList m_data;
+	m_data << path;
+	mythread->do_sql(m_data, 0);
+}
 int QdbcTemplate::countString(QString str)
 {
 	int count = 0;
@@ -56,25 +80,14 @@ bool QdbcTemplate::getdata_res()
 	}
 	return t;
 }
-
-QdbcTemplate::QdbcTemplate(QObject *parent)
-	: QObject(parent)
-{
-	int a = ++atom;
-	//暂时不使用线程处理，虽然此处看起来位线程
-	mythread = new QTmeplate(this);
-	//connect(this, &QdbcTemplate::do_sql, mythread,&QTmeplateThread::do_sql_slot);
-	QSettings *ini = new QSettings("qjbctemplate.ini", QSettings::IniFormat);
-	Loglevel = ini->value("TEMPLATE/Loglevel", 0).toInt();
-	delete ini;
-
-	mythread->QDBC_id = "QDBC_" % QString::number(a);
-	mythread->do_sql(mythread->m_data, 0);
-}
 QdbcTemplate::QdbcTemplate(QString flags)
 {
 	if (flags == "5") {
 		QdbcTemplate::singleinstance()->qtransactional();
+	}
+	else
+	{
+		this->assert_args("can not use this  class!");
 	}
 }
 void QdbcTemplate::args(QString value)
@@ -421,4 +434,26 @@ QdbcTemplate::~QdbcTemplate()
 {
 	QdbcTemplate::singleinstance()->qtransactional_clear();
 	
+}
+
+void Qconfig::setPath(char* path, char* name)
+{
+	fliepath = path;
+	filename = name;
+}
+
+bool Qconfig::fullfilepath(QString& path)
+{
+	QString names;
+	if (filename[0] == NULL) {
+		names = "qjbctemplate.ini";
+	}
+	else
+	{
+		names = QString(filename);
+	}
+	path = QString(fliepath) % "/" %  names;
+	QFileInfo t(path);
+	bool b =  t.isFile();
+	return b;
 }

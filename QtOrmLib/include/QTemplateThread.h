@@ -17,6 +17,7 @@ struct db_struct
 	QString passWord;
 	QString dbdriver;
 	QString timeout;
+	QString querystring;  //pool
 };
 class QTORMLIB_EXPORT QTmeplate : public QObject
 {
@@ -77,7 +78,7 @@ private:
 	QSqlDatabase* get_connect();
 	void close_connect(QSqlDatabase* db,const QString& errcoe);
 public:
-	bool read_date(db_struct& db);
+	bool read_date(db_struct & db, const QString & path);
 	//void run();
 	void do_result(QMap<int, QVariantList>  &m_data, bool sqlres, int flag);
 
@@ -85,4 +86,18 @@ public:
 	void detection_drive(QSqlDatabase* database);
 public slots:
 	void do_sql(QVariantList m_data, int falg);
+};
+#include <QSettings>
+class mysettings : public QSettings
+{
+public:
+	mysettings(const QString & fileName, Format format);
+
+	QString  getchildrensfromgrop(const QString group);
+	~mysettings()
+	{
+	}
+
+private:
+
 };

@@ -21,7 +21,7 @@ QdbcTemplate::QdbcTemplate(QObject *parent)
 	mythread = new QTmeplate(this);
 	QSettings *ini = new QSettings(path, QSettings::IniFormat);
 	Loglevel = ini->value("TEMPLATE/Loglevel", 0).toInt();
-	ini->setValue("TEMPLATE/Loglevel", QString(Qversion));
+	ini->setValue("TEMPLATE/version", QString(Qversion));
 	delete ini;
 
 	mythread->QDBC_id = "QDBC_" % QString::number(a);

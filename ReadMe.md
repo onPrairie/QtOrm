@@ -8,7 +8,7 @@
 
 ### Contents
 - [1,快速开始](#1快速开始)
-- [2,占位符](#2占位符)
+- [2,占位符与宏格式](#2占位符与宏格式)
 - [3,orm 类定义](#3orm-类定义)
 - [4,工具类：Object_utils](#4工具类object_utils)
 - [5,配置文件：qjbctemplate.ini](#5配置文件qjbctemplateini)
@@ -100,7 +100,7 @@ void updatetest()
    
      ​	Qdelete 表示删除宏	Qinsert 插入宏	Qdelete删除宏，此上三种宏只能有一个输出或不输出。此输出类型一定为int类型。  
 
-4. Qtransactional事务宏	  
+4. **Qtransactional事务宏**	  
 
    ​	默认放在函数的第一行，这样才能照顾到所有的sql操作，一旦某个sql操作出现了错误，则会回滚操作，否则提交，列子如下：
 
@@ -120,18 +120,16 @@ void transactionaltest()
    			qDebug() << "update:" << count;
    		}
 ```
-5. Qif 宏为逻辑判断,相当于if-else
-
-    - Qif(condition,va) 
+5. **Qif 宏为逻辑判断,相当于if-else**
+- Qif(condition,va) 
         condition 为逻辑判断条件,支持&&,||,!  
         va 为此condition条件成立时候，执行va。但va一定为字符串输出
     - Qelif(condition,va)
         condition 为逻辑判断条件,支持&&,||,!  
-		va 为此condition条件成立时候，执行va。但va一定为字符串输出,另外一定先执行Qif
+    	va 为此condition条件成立时候，执行va。但va一定为字符串输出,另外一定先执行Qif
 	-Qelse(va)
 		va 为所有的condition条件不成立时候，执行va。但va一定为字符串输出，另外一定先执行Qif或Qelif
-6. Qswitch 宏为选择判断，相当于switch-case,此宏需要跟Qcase连用
-	
+6. **Qswitch 宏为选择判断，相当于switch-case,此宏需要跟Qcase连用**
 	- Qswitch(const1) 
 	  const1 为常量，此常量支持字符串或者整形。
 	  
@@ -141,29 +139,37 @@ void transactionaltest()
   - Qdefault(value1)
 	  const1 为常量，此常量支持字符串或者整形。value1为匹配不到的const1值
 	
-	- Qforeach(begin,separator,end,collection) 
-	  
-	  Qforeach 宏为循环语句，相当于for语句，此宏需单独使用
 	
-		- begin 参数为字符串，此为collection的开始点
-		
-		- separator 参数为字符串，此为collection以什么分割
-		
-		- end  参数为字符串，此为collection的结束点
-		
-		- collection 此为QString,QList<int>,QStringList类型，QList<int>可以用宏IntList代替
-		
-
-6. Qclear  
+7. **Qforeach(begin,separator,end,collection)** 
+	
+	Qforeach 宏为循环语句，相当于for语句，此宏需单独使用
+	
+	- begin 参数为字符串，此为collection的开始点
+	
+	- separator 参数为字符串，此为collection以什么分割
+	
+	- end  参数为字符串，此为collection的结束点
+	
+	- collection 此为QString,QList<int>,QStringList类型，QList<int>可以用宏IntList代替
+	
+6. **Qclear**  
 
    ​	 Qclear为释放动态申请内存的指针变量,可以手动进行释放，如果不手动释放，申请的内存也会自动释放
 
-7. QconfigPath(path,name)
+7. **QconfigPath(path,name)**
 
    ​	此宏需要在执行sql语句之前进行配置，否则配置无效。
    
    - path:可以指定相对路径，也可以指定觉得路径，此路径可以是相对路径也可以是绝对路径。对于路径，请用反斜杠进行路径编码。如C:/11/22 。如何填空字符串，则于可执行文件路径相同。
    - name： 指定的配置文件名，如果name为空字符串，则写指定为默认的配置文件名：qjbctemplate.ini。否则以指定的配置文件名来指定。
+   
+8.  **QBye()**
+   
+   此宏用于对于在多线程情况下，线程需要不断的销毁于创建，需要在线程结束的时候放置 QBye()
+   
+9. **QDBC_Id**
+   
+   此宏用于在多线程下定位哪个线程打印的数据，每次增加一个线程，QDBC_Id就会增加1， 如：qDebug() << QDBC_Id << Object_utils::toString(lane);
    
    
    
@@ -377,5 +383,5 @@ Object_utils 此类将有三个静态成员函数分别为：
 
 ​	说明： 测试库(Qt-Orm-test )放置测试代码，源码库（QtOrm  ）不放置测试代码
 
-​	如果想修修改代码，或用于其他用途，请带有Qdbc.h中的注释。另遵守Apache License 2.0协议。当前版更行到**20.09.012**
+​	如果想修修改代码，或用于其他用途，请带有Qdbc.h中的注释。另遵守Apache License 2.0协议。当前版更行到**20.09.013**
 ​	

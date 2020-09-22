@@ -29,7 +29,7 @@ public:
 	QMutex sync;
 	bool is_pause;
 
-	bool is_init_done = false;
+	static bool is_init_done;
 
 	//¼ÌÐø
 	void resume()

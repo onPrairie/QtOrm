@@ -178,8 +178,10 @@ public:
 		return analysis;
 	}
 	void deleteselfAnalysis() {
-		delete analysis;
-		analysis = NULL;
+		if (analysis != NULL) {
+			delete analysis;
+			analysis = NULL;
+		}
 	}
 	//只能检查数据是否连接正常
 	bool getDabaseConnect();
@@ -190,7 +192,9 @@ public:
 		QMutexLocker lock(&__mutex);
 		if (!__instance__.contains(threadid)) {
 			QObject * o = NULL;
-			__instance__[threadid] = new QdbcTemplate(o);
+			QdbcTemplate* t = new QdbcTemplate(o);
+			t->thread_id = threadid;
+			__instance__[threadid] = t;
 			//检陋，未初始化的线程
 		}
 		return __instance__[threadid];
@@ -260,6 +264,7 @@ public:
 		adress.clear();
 		deleteselfAnalysis();
 	}
+	void QdbcTemplateClear();
 	~QdbcTemplate();
 private:
 	static QMap<int,QdbcTemplate*> __instance__;

@@ -48,7 +48,10 @@ bool Datebase_pool_tmeplate::LoadDatabase(const QString& db, const QString& host
 			dbDataMysql->setUserName(username);
 			dbDataMysql->setDatabaseName(dbname);
 			dbDataMysql->close();
-			db_g.append(dbDataMysql);
+			db_manger db;
+			db.db = dbDataMysql;
+			db.isUse = false;
+			g_db_manger.append(db);
 		}
 		if (flag == false) {
 			/*delete dbDataMysql;
@@ -57,9 +60,9 @@ bool Datebase_pool_tmeplate::LoadDatabase(const QString& db, const QString& host
 	}
 	_mutex.unlock();
 	for (int i = 0; i < initialPoolSize.toInt(); i++) {
-		if (!db_g[i]->open()) {
+		if (!g_db_manger[i].db->open()) {
 			flag = false;
-			qInfo() << "[QDBC:]" << db_g[i]->lastError().number() << ":" << db_g[i]->lastError().text();
+			qInfo() << "[QDBC:]" << g_db_manger[i].db->lastError().number() << ":" << g_db_manger[i].db->lastError().text();
 			//qDebug() << "mysql itsdata info : ip:" << ip << ",port:" << port << ",username:" << userName << ",password:" << passWord << ".";
 		}
 		else {
@@ -71,16 +74,30 @@ bool Datebase_pool_tmeplate::LoadDatabase(const QString& db, const QString& host
 
 QSqlDatabase * Datebase_pool_tmeplate::openConnection()
 {
-	int a = count++;		//局部性处理
-	qDebug() << "get datebase pool nums" << db_g[a]->connectionName();
-	return this->db_g[a];
+	QSqlDatabase* db = NULL;
+	for (int i = 0; i < g_db_manger.size(); i++) {
+		if (g_db_manger[i].isUse == false) {
+			_mutex.lock();
+			g_db_manger[i].isUse = true;
+			_mutex.unlock();
+			db =  g_db_manger[i].db;
+			break;
+		}
+	}
+	return db;
 }
 
 bool Datebase_pool_tmeplate::closeConnection(QSqlDatabase * db)
 {
-	int a = count--;
-	qDebug() << "back datebase pool nums" << db->connectionName();
-	return false;
+	for (int i = 0; i < g_db_manger.size(); i++) {
+		if (g_db_manger[i].db == db) {
+			_mutex.lock();
+			g_db_manger[i].isUse = false;
+			_mutex.unlock();
+			break;
+		}
+	}
+	return true;
 }
 
 bool Datebase_pool_tmeplate::removeConnection()

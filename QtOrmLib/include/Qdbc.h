@@ -67,8 +67,10 @@ public:	\
 
 #define  QDBC_Id QdbcTemplate::singleinstance()->getselfthread()->get_QDBC_id()
 
+#define QBye()	QdbcTemplate::singleinstance()->QdbcTemplateClear()
+
 #define QMajor_version "20.09"
-#define Qminor_version "012"
+#define Qminor_version "013"
 #define Qstable   "s"
 #define Qtest     "c"
 

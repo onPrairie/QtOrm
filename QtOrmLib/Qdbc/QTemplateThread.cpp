@@ -14,6 +14,7 @@
 #endif
 int QTmeplate::qdbc_mod = -1;
 int QTmeplate::loglevel;
+bool QTmeplate::is_init_done = false;
 QTmeplate::QTmeplate(QObject *parent)
 	: QObject(parent)
 {
@@ -126,31 +127,15 @@ void QTmeplate::do_sql(QVariantList m_data, int falg)
 					this->detection_drive(get_connect());
 				}
 			}
-			this->is_init_done = true;
+			QTmeplate::is_init_done = true;
 			qInfo() << this->QDBC_id << "数据库初始化完成@@@";
 			//线程分发
 		}
 		else
 		{
-			QdbcTemplate* tmep1 = NULL;
 			while (true)
 			{
-					//线程加入
-				QMap<int, QdbcTemplate*> t1 = QdbcTemplate::Allinstance();
-				for each (QdbcTemplate* tmep in t1)
-				{
-					QMap<int, QVariantList>  map_data;
-					if (tmep->getselfthread()->QDBC_id == "QDBC_1") {
-						tmep1 = tmep;
-						break;
-					}
-				}
-				if (tmep1 == NULL) {
-					continue;
-				}
-				if (tmep1->getselfthread()->is_init_done == true) {
-					int b = tmep1->getselfthread()->sqlres;
-					do_result(b);
+				if (QTmeplate::is_init_done == true) {
 					qInfo() << this->QDBC_id << "数据库初始化完成@@@";
 					break;
 				}
@@ -295,6 +280,12 @@ void QTmeplate::do_sql(QVariantList m_data, int falg)
 		qInfo() << QDBC_id << " close the databases";
 		QdbcFactory::createDataSource(qdbc_mod)->removeConnection();
 
+	}
+	case 9:
+	{
+		QSqlDatabase* database = get_connect();
+		QdbcFactory::createDataSource(qdbc_mod)->closeConnection(database);
+		database = NULL;
 	}
 	default:
 		break;

@@ -99,6 +99,7 @@ void QdbcTemplate::args(QString value)
 }
 void QdbcTemplate::assert_args(const QString& str)
 {
+	qCritical(str.toUtf8());
 	{
 		QMutexLocker lock(&__mutex);
 		mythread->m_data.clear();
@@ -421,7 +422,24 @@ bool QdbcTemplate::invokefunc(QObject * value, QByteArray name, QVariant & t)
 	}
 	return resfunc;
 }
-
+void QdbcTemplate::QdbcTemplateClear()
+{
+	QVariantList m_data;
+	mythread->do_sql(m_data, 9);
+	delete mythread;
+	//if (analysis != NULL) {
+	//	delete analysis;
+	//}
+	ponit_clear();
+	
+	int id = this->thread_id;
+	QdbcTemplate* t = __instance__[this->thread_id];
+	
+	__mutex.lock();
+	__instance__.remove(id);
+	__mutex.unlock();
+	delete t;
+}
 void QdbcTemplate::thread_dispatch_flag4()
 {
 	for each (QdbcTemplate* tmep in __instance__)
@@ -432,12 +450,18 @@ void QdbcTemplate::thread_dispatch_flag4()
 
 QdbcTemplate::~QdbcTemplate()
 {
-	QdbcTemplate::singleinstance()->qtransactional_clear();
+	//QdbcTemplate::singleinstance()->qtransactional_clear();
 	
 }
 
 void Qconfig::setPath(char* path, char* name)
 {
+	if (strlen(path) == '0') {
+		path = NULL;
+	}
+	if (strlen(name) == 0) {
+		name = NULL;
+	}
 	fliepath = path;
 	filename = name;
 }
@@ -445,12 +469,15 @@ void Qconfig::setPath(char* path, char* name)
 bool Qconfig::fullfilepath(QString& path)
 {
 	QString names;
-	if (filename[0] == NULL) {
+	if (filename == NULL) {
 		names = "qjbctemplate.ini";
 	}
 	else
 	{
 		names = QString(filename);
+	}
+	if (fliepath == NULL) {
+		fliepath = ".";
 	}
 	path = QString(fliepath) % "/" %  names;
 	QFileInfo t(path);

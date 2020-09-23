@@ -84,8 +84,7 @@ public:
 
 	void do_result(bool sqlres);
 	void detection_drive(QSqlDatabase* database);
-public slots:
-	void do_sql(QVariantList m_data, int falg);
+	void do_sql(int falg);
 };
 #include <QSettings>
 class mysettings : public QSettings

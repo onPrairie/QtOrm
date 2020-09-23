@@ -199,7 +199,7 @@ public:
 		}
 		return __instance__[threadid];
 	}
-	static	QMap<int, QdbcTemplate*>  Allinstance() {
+	static	QHash<int, QdbcTemplate*>  Allinstance() {
 		return __instance__;
 	}
 
@@ -240,7 +240,7 @@ public:
 	//线程分发
 	void thread_dispatch_flag4();
 
-	QMap<int,void*> adress;
+	QHash<int,void*> adress;
 
 	/****c code****/
 	
@@ -257,7 +257,7 @@ public:
 		this->adress.remove((int)t1);
 	}
 	void ponit_clear() {
-		QMap<int, void*>::const_iterator i;
+		QHash<int, void*>::const_iterator i;
 		for (i = adress.constBegin(); i != adress.constEnd(); ++i) {
 			delete i.value();
 		}
@@ -267,7 +267,7 @@ public:
 	void QdbcTemplateClear();
 	~QdbcTemplate();
 private:
-	static QMap<int,QdbcTemplate*> __instance__;
+	static QHash<int,QdbcTemplate*> __instance__;
 };
 template<typename T>
 inline QdbcTemplate & QdbcTemplate::operator>(T & value)
@@ -282,7 +282,7 @@ inline QdbcTemplate & QdbcTemplate::operator>(T & value)
 		}
 
 		qInfo() << mythread->QDBC_id << " Qdbc perpare start<...";
-		mythread->do_sql(mythread->m_data, mythread->flag);
+		mythread->do_sql(mythread->flag);
 		this->In_count = 0;
 
 	}
@@ -323,7 +323,7 @@ inline QdbcTemplate & QdbcTemplate::operator>(T *& value)
 		}
 
 		qInfo() << mythread->QDBC_id << " Qdbc perpare start<...";
-		mythread->do_sql(mythread->m_data, mythread->flag);
+		mythread->do_sql(mythread->flag);
 		this->In_count = 0;
 
 	}
@@ -372,7 +372,7 @@ inline QdbcTemplate & QdbcTemplate::operator >(QList<T*>& value)
 		}
 
 		qInfo() << mythread->QDBC_id << " Qdbc perpare start<...";
-		mythread->do_sql(mythread->m_data, mythread->flag);
+		mythread->do_sql(mythread->flag);
 		this->In_count = 0;
 
 	}

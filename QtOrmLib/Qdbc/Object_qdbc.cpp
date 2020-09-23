@@ -5,7 +5,7 @@
 #include <QMetaType>
 #include <QMetaProperty>
 #include "../include/Qdbc.h"
-QMap<int, QdbcTemplate*> QdbcTemplate::__instance__;
+QHash<int, QdbcTemplate*> QdbcTemplate::__instance__;
 QdbcTemplate::QdbcTemplate(QObject *parent)
 	: QObject(parent)
 {
@@ -25,9 +25,8 @@ QdbcTemplate::QdbcTemplate(QObject *parent)
 	delete ini;
 
 	mythread->QDBC_id = "QDBC_" % QString::number(a);
-	QVariantList m_data;
-	m_data << path;
-	mythread->do_sql(m_data, 0);
+	mythread->m_data.append(path);
+	mythread->do_sql(0);
 }
 int QdbcTemplate::countString(QString str)
 {
@@ -45,7 +44,7 @@ void QdbcTemplate::qtransactional()
 {
 	
 	mythread->flag = 5;
-	mythread->do_sql(mythread->m_data, mythread->flag);
+	mythread->do_sql(mythread->flag);
 	if (getdata_res()) {
 		mythread->issqltransactionResult = true;
 	}
@@ -61,12 +60,12 @@ void QdbcTemplate::qtransactional_clear()
 {
 	if (mythread->issqltransactionResult == false) {
 		mythread->flag = 7;
-		mythread->do_sql(mythread->m_data, mythread->flag);
+		mythread->do_sql(mythread->flag);
 		qDebug() << mythread->QDBC_id % "rollback the transaction!" << getdata_res();		
 	}
 	else {
 		mythread->flag = 6;
-		mythread->do_sql(mythread->m_data, mythread->flag);
+		mythread->do_sql(mythread->flag);
 		qDebug() << mythread->QDBC_id %  "commit the transaction!" << getdata_res();
 	}
 	
@@ -104,7 +103,7 @@ void QdbcTemplate::assert_args(const QString& str)
 		QMutexLocker lock(&__mutex);
 		mythread->m_data.clear();
 		mythread->res_data.clear();
-		mythread->do_sql(mythread->m_data,8);
+		mythread->do_sql(8);
 	}
 	qFatal(str.toUtf8());
 }
@@ -266,7 +265,7 @@ QdbcTemplate & QdbcTemplate::operator >(QString & value)
 			return *this;
 		}
 		qInfo() << mythread->QDBC_id << " Qdbc perpare start<...";
-		mythread->do_sql(mythread->m_data, mythread->flag);
+		mythread->do_sql(mythread->flag);
 		this->In_count = 0;
 
 	}
@@ -299,7 +298,7 @@ QdbcTemplate & QdbcTemplate::operator > (int & value)
 			return *this;
 		}
 		qInfo() << mythread->QDBC_id  <<  "[QDBC] Qdbc perpare start<...";
-		mythread->do_sql(mythread->m_data, mythread->flag);
+		mythread->do_sql(mythread->flag);
 		this->In_count = 0;
 
 	}
@@ -330,7 +329,7 @@ QdbcTemplate& QdbcTemplate::operator > (bool& value) {
 			return *this;
 		}
 		qInfo() << mythread->QDBC_id << "[QDBC] Qdbc perpare start<...";
-		mythread->do_sql(mythread->m_data, mythread->flag);
+		mythread->do_sql(mythread->flag);
 		this->In_count = 0;
 
 	}
@@ -362,7 +361,7 @@ bool QdbcTemplate::getDabaseConnect()
 	else
 	{
 		mythread->flag = 1;
-		mythread->do_sql(mythread->m_data, mythread->flag);
+		mythread->do_sql(mythread->flag);
 		t = getdata_res();
 	}
 	clear();
@@ -424,8 +423,8 @@ bool QdbcTemplate::invokefunc(QObject * value, QByteArray name, QVariant & t)
 }
 void QdbcTemplate::QdbcTemplateClear()
 {
-	QVariantList m_data;
-	mythread->do_sql(m_data, 9);
+	mythread->m_data.clear();
+	mythread->do_sql(9);
 	delete mythread;
 	//if (analysis != NULL) {
 	//	delete analysis;

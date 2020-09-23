@@ -70,7 +70,7 @@ public:	\
 #define QBye()	QdbcTemplate::singleinstance()->QdbcTemplateClear()
 
 #define QMajor_version "20.09"
-#define Qminor_version "013"
+#define Qminor_version "014"
 #define Qstable   "s"
 #define Qtest     "c"
 

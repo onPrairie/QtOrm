@@ -100,7 +100,7 @@ void QTmeplate::close_connect(QSqlDatabase * db,const QString& errcoe)
 	}*/
 	
 }
-void QTmeplate::do_sql(QVariantList m_data, int falg)
+void QTmeplate::do_sql(int falg)
 {
 	
 	switch (falg)

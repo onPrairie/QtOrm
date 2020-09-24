@@ -120,7 +120,6 @@ static int atom;
 static QMutex __mutex;
 static char* fliepath;
 static char* filename;
-static bool isautomemory;
 
 class QTORMLIB_EXPORT QdbcTemplate : public QObject
 {
@@ -144,7 +143,7 @@ private:
 	QTmeplate* mythread;
 	Analysis_container* analysis = NULL;
 	
-	
+	bool isautomemory;
 
 	void clear() {
 		this->In_count =  0;
@@ -241,7 +240,7 @@ public:
 	//线程分发
 	void thread_dispatch_flag4();
 
-	QHash<int,void*> adress;
+	QHash<int,QObject*> adress;
 
 	/****c code****/
 	
@@ -259,9 +258,10 @@ public:
 	}
 	void hashclear() {
 		if (isautomemory == true) {
-			QHash<int, void*>::const_iterator i;
+			QHash<int, QObject*>::const_iterator i;
 			for (i = adress.constBegin(); i != adress.constEnd(); ++i) {
-				delete i.value();
+				QObject* t = i.value();
+				delete t;
 			}
 		}
 		adress.clear();

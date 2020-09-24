@@ -18,9 +18,21 @@ QdbcTemplate::QdbcTemplate(QObject *parent)
 	int a = ++atom;
 	//暂时不使用线程处理，虽然此处看起来位线程
 	//fullfilepath(Qconfig::filename, Qconfig::fliepath);
-	mythread = new QTmeplate(this);
+	mythread = new QTmeplate;
 	QSettings *ini = new QSettings(path, QSettings::IniFormat);
 	Loglevel = ini->value("TEMPLATE/Loglevel", 0).toInt();
+	QString memory =  ini->value("TEMPLATE/automemory").toString();
+	if (memory == false) {
+		isautomemory = false;
+	}
+	else if(memory == true)
+	{
+		isautomemory = true;
+	}
+	else
+	{
+		assert_args("TEMPLATE/automemory config error!");
+	}
 	ini->setValue("TEMPLATE/version", QString(Qversion));
 	delete ini;
 
@@ -98,7 +110,7 @@ void QdbcTemplate::args(QString value)
 }
 void QdbcTemplate::assert_args(const QString& str)
 {
-	qCritical(str.toUtf8());
+	//qCritical(str.toUtf8());
 	{
 		QMutexLocker lock(&__mutex);
 		mythread->m_data.clear();

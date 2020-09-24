@@ -15,8 +15,7 @@
 int QTmeplate::qdbc_mod = -1;
 int QTmeplate::loglevel;
 bool QTmeplate::is_init_done = false;
-QTmeplate::QTmeplate(QObject *parent)
-	: QObject(parent)
+QTmeplate::QTmeplate()
 {
 
 

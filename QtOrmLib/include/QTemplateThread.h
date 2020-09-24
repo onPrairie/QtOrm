@@ -19,12 +19,12 @@ struct db_struct
 	QString timeout;
 	QString querystring;  //pool
 };
-class QTORMLIB_EXPORT QTmeplate : public QObject
+class QTORMLIB_EXPORT QTmeplate
 {
-	Q_OBJECT
+	//Q_OBJECT
 
 public:
-	QTmeplate(QObject *parent);
+	QTmeplate();
 	QWaitCondition pauseCond;
 	QMutex sync;
 	bool is_pause;

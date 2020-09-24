@@ -59,12 +59,6 @@
     <ClCompile Include="GeneratedFiles\Release\moc_QdbcFactory.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_QTemplateThread.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_QTemplateThread.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
     <ClCompile Include="Qdbc\analysis_container.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

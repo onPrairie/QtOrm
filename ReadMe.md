@@ -365,7 +365,8 @@ Object_utils 此类将有三个静态成员函数分别为：
 		timeout=2		#连接数据库的延迟
 		[TEMPLATE]
 		Loglevel=1		#日志水平，0代表全输出，1代表不输出
-		version=20.09.012c		#版本既可以在配置文件看，也可以在Qdbc.h中查看
+		automemory=ture	#如果为true,则有Qdbc来管理动态分配的内存，如果false则手动管理内存，Qclear宏将无效。
+		version=20.09.014c		#版本既可以在配置文件看，也可以在Qdbc.h中查看
 
 		[pool]
 		initialPoolSize=4	#线程池的个数，暂时只支持默认的线程池，如需扩展，等待后续开发
@@ -383,5 +384,5 @@ Object_utils 此类将有三个静态成员函数分别为：
 
 ​	说明： 测试库(Qt-Orm-test )放置测试代码，源码库（QtOrm  ）不放置测试代码
 
-​	如果想修修改代码，或用于其他用途，请带有Qdbc.h中的注释。另遵守Apache License 2.0协议。当前版更行到**20.09.014*
+​	如果想修修改代码，或用于其他用途，请带有Qdbc.h中的注释。另遵守Apache License 2.0协议。版本请看配置文件
 ​	

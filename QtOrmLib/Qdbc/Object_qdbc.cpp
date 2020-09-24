@@ -22,10 +22,10 @@ QdbcTemplate::QdbcTemplate(QObject *parent)
 	QSettings *ini = new QSettings(path, QSettings::IniFormat);
 	Loglevel = ini->value("TEMPLATE/Loglevel", 0).toInt();
 	QString memory =  ini->value("TEMPLATE/automemory").toString();
-	if (memory == false) {
+	if (memory == "false") {
 		isautomemory = false;
 	}
-	else if(memory == true)
+	else if(memory == "true")
 	{
 		isautomemory = true;
 	}
@@ -110,7 +110,7 @@ void QdbcTemplate::args(QString value)
 }
 void QdbcTemplate::assert_args(const QString& str)
 {
-	//qCritical(str.toUtf8());
+	qCritical(str.toUtf8());
 	{
 		QMutexLocker lock(&__mutex);
 		mythread->m_data.clear();

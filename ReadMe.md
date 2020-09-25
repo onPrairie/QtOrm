@@ -24,7 +24,8 @@
 
 4. 导入laneip表（网络检测表），数据库一定要utf-8格式，测试的数据表如下
 
-   ```CREATE TABLE NewTable (
+   ```
+   CREATE TABLE NewTable (
    id  int(11) NOT NULL AUTO_INCREMENT ,
    ip  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ,
    port  varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ,
@@ -44,9 +45,9 @@
 
    表结构解释：
 
-   | 字段名      | 描述                                                         |
-   | :---------- | :----------------------------------------------------------- |
    | id          | 默认自增长                                                   |
+   | :---------- | :----------------------------------------------------------- |
+   | 字段名      | 描述                                                         |
    | ip          | 网站的ip                                                     |
    | port        | 网站的端口                                                   |
    | url         | 网站的url                                                    |
@@ -238,7 +239,7 @@ void transactionaltest()
 			Q_ATTR(QString, ip)
 			Q_ATTR(int, port)
 			Q_ATTR(QString,url)
-			Q_ATTR(int,entryno)
+			Q_ATTR(QString,entryno)
 			Q_ATTR(int,etype)
 			Q_ATTR(int, Status)
 			Q_ATTR(QString, description)

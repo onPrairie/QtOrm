@@ -189,8 +189,8 @@ public:
 
 	static	QdbcTemplate*  singleinstance() {
 		int threadid =  quintptr(QThread::currentThreadId());
-		QMutexLocker lock(&__mutex);
 		if (!__instance__.contains(threadid)) {
+			QMutexLocker lock(&__mutex);
 			QObject * o = NULL;
 			QdbcTemplate* t = new QdbcTemplate(o);
 			t->thread_id = threadid;

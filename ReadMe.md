@@ -50,7 +50,7 @@
    | ip          | 网站的ip                                                     |
    | port        | 网站的端口                                                   |
    | url         | 网站的url                                                    |
-   | entryno     | 网站的地点编号（‘bj’：北京，'sh'：上海，'sz'：深圳，'js'：江苏） |
+   | entryno     | 网站的地点编号（‘0’：北京，'1'：上海，'2'：深圳，'3'：江苏） |
    | etype       | 网站种类（0：‘ 企业网站 ’，1：‘ 行业网站 ’，2：‘ B2B电子商务网站 ’） |
    | description | 网络状态描述 （‘网络异常,连接超时’，‘网络正常’）             |
    | updatetime  | 更新事件，如果不填，则为当前时间                             |
@@ -106,19 +106,19 @@ void updatetest()
 
 ```c
 void transactionaltest()
-   	{
-   			Qtransactional();
-   			Laneip lane = Laneip();
-   			lane["ip"] = "192.168.1.103";
-   			lane["id"] = 2;
-   			QString sql = "UPDATE laneip SET ip=#{ip} WHERE id=#{id}";
-   			int count;
-   			Qupdate("UPDATE laneip SET1 ip=#{ip} WHERE id=#{id}") < lane > count;
-   			lane["ip"] = "192.168.1.104";
-   			lane["id"] = 2;
-   			Qupdate(sql) < lane > count;
-   			qDebug() << "update:" << count;
-   		}
+{
+	Qtransactional();
+	Laneip lane;
+	lane.ip = "192.168.1.103";
+	lane.id = 2;
+	QString sql = "UPDATE laneip SET ip=#{ip} WHERE id=#{id}";
+	int count;
+	Qupdate("UPDATE laneip SET1 ip=#{ip} WHERE id=#{id}") < &lane > count;
+	lane.ip = "192.168.1.104";
+	lane.id = 2;
+	Qupdate(sql) < &lane > count;
+	qDebug() << "update:" << count;
+}
 ```
 5. **Qif 宏为逻辑判断,相当于if-else**
 - Qif(condition,va) 
@@ -214,7 +214,7 @@ void transactionaltest()
 **此方法为测试Qforeach功能,此返回是list类型**
 
 ```c
-		void QHello::foreachtest()
+		void foreachtest()
 		{
 			qDebug() << "QHello::selectAl start";
 			QList<Laneip*> lanelist;
@@ -300,13 +300,13 @@ Qselect(sql) < 3 > lane;
 Object_utils 此类将有三个静态成员函数分别为：
 
 ```c
-				- static QString toString(T* src)   
-				- static QString toString(QList<T*>& value)	*
-				- static void copy(T* src,T* dec) 
-				- static void clear(T& data)
-				- static void clear(T* & data)
-				- static bool isNULL(T& data)
-				- static bool isClear(T& data)																				
+	static QString toString(T* src)   
+    static QString toString(QList<T*>& value)	
+    static void copy(T* src,T* dec) 
+    static void clear(T& data)
+	static void clear(T* & data)
+    static bool isNULL(T& data)
+    static bool isClear(T& data)																				
 ```
 
 1. 对于static QString toString(T* src)   )静态成员函数而言，返回的是定义orm类字符串格式化的内容,以"["开头，“]”结尾，中间为类成员咱开。

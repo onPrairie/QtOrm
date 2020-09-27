@@ -245,7 +245,7 @@ void transactionaltest()
 			Q_ATTR(QDateTime,updatetime)
 		};
 ```
-​		对于orm定义的类,使用Q_ATTR来包裹定义的成员变量。此宏默认会在其成员中加入get或set方法，并且大小写敏感，禁止使用static变量
+​		对于orm定义的类,使用Q_ATTR来包裹定义的成员变量。此宏默认会在其成员中加入get或set方法，并且大小写敏感，禁止使用static变量，并且不要试图用laneip(QObject *parent): QObject(parent)来定义。
 
 2. 属性说明	
 
@@ -287,11 +287,11 @@ Qselect(sql) < 3 > lane;
 假设orm定义的类为T,对于输入（<） 而言，只能为T，对于输出而言，可以为T，或者 Qlist<T*> 类型，*T。
 ```
 
-​	我们以Laneip的定义类来举例,详见如下表格。而对于指针类型，直接用NULL进行判断，而对于直接定义的类型，需要用	Object_utils::isNULL 进行判断
+​	我们以Laneip的定义类来举例,详见如下表格。而对于指针类型，直接用NULL进行判断，而对于直接定义的类型，需要用	Object_utils::isNULL 进行判断。***需要规定的是如果对象输出的对象为NULL，那么qdbc会默认new一个对象，否则视为已分配对象，不会重复分配。***
 
-| 输入（<）   | 输出（<）                                            |
-| ----------- | ---------------------------------------------------- |
-| Laneip lane | Laneip lane 或者 Laneip* lane或者QList<Laneip*> lane |
+| 输入（<）                                 | 输出（>）                                                    |
+| ----------------------------------------- | ------------------------------------------------------------ |
+| Laneip lane 或者 lane* lane  = new Lane() | Laneip lane 或者 Laneip* lane = new Laneip()或者Laneip* lane=NULL或者QList<Laneip*> lane |
 
 ​		 
 

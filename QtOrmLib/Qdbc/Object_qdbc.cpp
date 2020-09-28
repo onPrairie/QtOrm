@@ -174,7 +174,61 @@ QdbcTemplate & QdbcTemplate::operator <(QObject*  value)
 	return *this;
 
 }
-QdbcTemplate & QdbcTemplate::operator <(QString value)
+QdbcTemplate & QdbcTemplate::operator<(QObject & value)
+{
+	QString sql = mythread->m_data[0].toString();
+
+	const QMetaObject *metaObject = value.metaObject();
+	int count = metaObject->propertyCount();
+	//先算预处理
+	int index_str = 0;
+	while (true)
+	{
+		int res = sql.indexOf("#{", index_str + 2);
+		if (res == index_str || res == -1) {
+			break;
+		}
+		index_str = res;
+		int lastindex = sql.indexOf('}', index_str);
+		QString str = sql.mid(index_str + 2, lastindex - index_str - 2);
+
+		QVariant t1;
+		bool resfunc = invokefunc(&value, str.toUtf8(), t1);
+		if (resfunc == false) {
+			QString strs = "There is no such function : get" + str;
+			assert_args(strs);
+		}
+		mythread->m_data.append(t1);
+		sql.replace("#{"%str%"}", "?");
+
+		In_count++;
+	}
+
+	//再算字符串拼接
+	index_str = 0;
+	while (true)
+	{
+		int res = sql.indexOf("${", index_str + 1);
+		if (res == index_str || res == -1) {
+			break;
+		}
+		index_str = res;
+		int lastindex = sql.indexOf('}', index_str);
+		QString str = sql.mid(index_str + 2, lastindex - index_str - 2);
+
+		QVariant t1;
+		bool resfunc = invokefunc(&value, str.toUtf8(), t1);
+		if (resfunc == false) {
+			QString strs = "There is no such function : get" + str;
+			assert_args(strs);
+		}
+		mythread->m_data.append(t1);
+		sql.replace("#{"%str%"}", t1.toString());
+	}
+	mythread->m_data[0] = sql;
+	return *this;
+}
+QdbcTemplate & QdbcTemplate::operator <(const QString& value)
 {
 	args(value);
 	QString sql = mythread->m_data[0].toString();

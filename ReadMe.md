@@ -51,7 +51,7 @@
    | ip          | 网站的ip                                                     |
    | port        | 网站的端口                                                   |
    | url         | 网站的url                                                    |
-   | entryno     | 网站的地点编号（‘bj’：北京，'sh'：上海，'sz'：深圳，'js'：江苏） |
+   | entryno     | 网站的地点编号（‘0’：北京，'1'：上海，'2'：深圳，'3'：江苏） |
    | etype       | 网站种类（0：‘ 企业网站 ’，1：‘ 行业网站 ’，2：‘ B2B电子商务网站 ’） |
    | description | 网络状态描述 （‘网络异常,连接超时’，‘网络正常’）             |
    | updatetime  | 更新事件，如果不填，则为当前时间                             |
@@ -107,19 +107,19 @@ void updatetest()
 
 ```c
 void transactionaltest()
-   	{
-   			Qtransactional();
-   			Laneip lane = Laneip();
-   			lane["ip"] = "192.168.1.103";
-   			lane["id"] = 2;
-   			QString sql = "UPDATE laneip SET ip=#{ip} WHERE id=#{id}";
-   			int count;
-   			Qupdate("UPDATE laneip SET1 ip=#{ip} WHERE id=#{id}") < lane > count;
-   			lane["ip"] = "192.168.1.104";
-   			lane["id"] = 2;
-   			Qupdate(sql) < lane > count;
-   			qDebug() << "update:" << count;
-   		}
+{
+	Qtransactional();
+	Laneip lane;
+	lane.ip = "192.168.1.103";
+	lane.id = 2;
+	QString sql = "UPDATE laneip SET ip=#{ip} WHERE id=#{id}";
+	int count;
+	Qupdate("UPDATE laneip SET1 ip=#{ip} WHERE id=#{id}") < &lane > count;
+	lane.ip = "192.168.1.104";
+	lane.id = 2;
+	Qupdate(sql) < &lane > count;
+	qDebug() << "update:" << count;
+}
 ```
 5. **Qif 宏为逻辑判断,相当于if-else**
 - Qif(condition,va) 
@@ -179,7 +179,7 @@ void transactionaltest()
 ```c
 		void iftest()
 		{
-			Laneip* lane;
+			Laneip* lane = NULL;
 			QString ip = "192.168.1.104";
 			QString sql = "SELECT * FROM laneip WHERE id = "
 				Qif(ip == "192.168.1.104", "2")
@@ -198,7 +198,7 @@ void transactionaltest()
 ```c
 		void switchtest()
 		{
-			Laneip* lane;
+			Laneip* lane = NULL;
 			QString ip = "192.168.1.104";
 			QString sql = "SELECT * FROM laneip WHERE id = "
 				Qswitch(ip)
@@ -215,7 +215,7 @@ void transactionaltest()
 **此方法为测试Qforeach功能,此返回是list类型**
 
 ```c
-		void QHello::foreachtest()
+		void foreachtest()
 		{
 			qDebug() << "QHello::selectAl start";
 			QList<Laneip*> lanelist;
@@ -246,7 +246,7 @@ void transactionaltest()
 			Q_ATTR(QDateTime,updatetime)
 		};
 ```
-​		对于orm定义的类,使用Q_ATTR来包裹定义的成员变量。此宏默认会在其成员中加入get或set方法，并且大小写敏感，禁止使用static变量
+​		对于orm定义的类,使用Q_ATTR来包裹定义的成员变量。此宏默认会在其成员中加入get或set方法，并且大小写敏感，禁止使用static变量，并且不要试图用laneip(QObject *parent): QObject(parent)来定义。
 
 2. 属性说明	
 
@@ -275,12 +275,12 @@ void transactionaltest()
 ​	**属性类型规定：如果想要使用自定义类型，需要继承Object_qdbc，继承之后就可以与标签进行绑定，属性暂时只能规定: 字符串类型 QString   时间类型 QDateTime	值类型   int,bool		更多类型后续增加**  **。而对于自定义的变量需要定义成指针：**
 
 ```c
-Laneip *lane;
-QString sql = "SELECT * FROM laneip WHERE id = #{lid}";
-Qselect(sql) < 3 > lane;
+    Laneip *lane = NULL;
+    QString sql = "SELECT * FROM laneip WHERE id = #{lid}";
+    Qselect(sql) < 3 > lane;
 ```
 
-   		***注意：orm采用的办自动化内存管理,会在适当的时机释放掉此内存，千万不要收到delete,如果想要delete此指针，请使用此宏函数Qclear()。此指针不会保存很长时间，如果想长期保存，需要自己定义变量来保存。***
+***注意：orm采用的办自动化内存管理,会在适当的时机释放掉此内存，千万不要收到delete,如果想要delete此指针，请使用此宏函数Qclear()。此指针不会保存很长时间，如果想长期保存，需要自己定义变量来保存。***
 
 ​	3 . 输入与输出
 
@@ -288,11 +288,11 @@ Qselect(sql) < 3 > lane;
 假设orm定义的类为T,对于输入（<） 而言，只能为T，对于输出而言，可以为T，或者 Qlist<T*> 类型，*T。
 ```
 
-​	我们以Laneip的定义类来举例,详见如下表格。而对于指针类型，直接用NULL进行判断，而对于直接定义的类型，需要用	Object_utils::isNULL 进行判断
+​	我们以Laneip的定义类来举例,详见如下表格。而对于指针类型，直接用NULL进行判断，而对于直接定义的类型，需要用	Object_utils::isNULL 进行判断。***需要规定的是如果对象输出的对象为NULL，那么qdbc会默认new一个对象，否则视为已分配对象，不会重复分配。***
 
-| 输入（<）   | 输出（<）                                            |
-| ----------- | ---------------------------------------------------- |
-| Laneip lane | Laneip lane 或者 Laneip* lane或者QList<Laneip*> lane |
+| 输入（<）                                 | 输出（>）                                                    |
+| ----------------------------------------- | ------------------------------------------------------------ |
+| Laneip lane 或者 lane* lane  = new Lane() | Laneip lane 或者 Laneip* lane = new Laneip()或者Laneip* lane=NULL或者QList<Laneip*> lane |
 
 ​		 
 
@@ -301,13 +301,13 @@ Qselect(sql) < 3 > lane;
 Object_utils 此类将有三个静态成员函数分别为：
 
 ```c
-				- static QString toString(T* src)   
-				- static QString toString(QList<T*>& value)	*
-				- static void copy(T* src,T* dec) 
-				- static void clear(T& data)
-				- static void clear(T* & data)
-				- static bool isNULL(T& data)
-				- static bool isClear(T& data)																				
+	static QString toString(T* src)   
+	static QString toString(QList<T*>& value)	
+	static void copy(T* src,T* dec) 
+	static void clear(T& data)
+	static void clear(T* & data)
+	static bool isNULL(T& data)
+	static bool isClear(T& data)																				
 ```
 
 1. 对于static QString toString(T* src)   )静态成员函数而言，返回的是定义orm类字符串格式化的内容,以"["开头，“]”结尾，中间为类成员咱开。
@@ -315,7 +315,7 @@ Object_utils 此类将有三个静态成员函数分别为：
 ​		此内容大致为:"[ id:3 ip:192.168.1.100 port:100 url:https://github.com/linuxguangbo/ entryno:111 etype:1 Status:1 description:正常 updatetime:2020-09-08T17:33:55 ]"
 
 ```c
-       		Laneip* lane;
+       		Laneip* lane = NULL;
             QString sql = "SELECT * FROM laneip where id = 2";
             Qselect(sql)  > lane;
             qDebug() << Object_utils::toString(lane);
@@ -333,7 +333,7 @@ Object_utils 此类将有三个静态成员函数分别为：
 3. 对于static void copy(T* src,T* dec) 成员而言，为复制定义为orm类的工具。因为继承于Qobject的类禁止拷贝复制，则可以用 copy函数来实现：
 
 ```c
-				Laneip *lane;
+				Laneip *lane = NULL;
 				QString sql = "SELECT * FROM laneip WHERE id = #{lid}";
 				Qselect(sql) < 3 > lane;
 				if (lane == NULL) {
@@ -356,7 +356,7 @@ Object_utils 此类将有三个静态成员函数分别为：
 ​	
 
 ```
-	    [MYSQL]   #暂时只要支持MYSQL
+		[MYSQL]   #暂时只要支持MYSQL
 		host=127.0.0.1	#数据库地址
 		port=3306	#数据库端口
 		dbname=test1	#数据库名

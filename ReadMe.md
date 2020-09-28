@@ -178,7 +178,7 @@ void transactionaltest()
 ```c
 		void iftest()
 		{
-			Laneip* lane;
+			Laneip* lane = NULL;
 			QString ip = "192.168.1.104";
 			QString sql = "SELECT * FROM laneip WHERE id = "
 				Qif(ip == "192.168.1.104", "2")
@@ -197,7 +197,7 @@ void transactionaltest()
 ```c
 		void switchtest()
 		{
-			Laneip* lane;
+			Laneip* lane = NULL;
 			QString ip = "192.168.1.104";
 			QString sql = "SELECT * FROM laneip WHERE id = "
 				Qswitch(ip)
@@ -274,12 +274,12 @@ void transactionaltest()
 ​	**属性类型规定：如果想要使用自定义类型，需要继承Object_qdbc，继承之后就可以与标签进行绑定，属性暂时只能规定: 字符串类型 QString   时间类型 QDateTime	值类型   int,bool		更多类型后续增加**  **。而对于自定义的变量需要定义成指针：**
 
 ```c
-Laneip *lane;
-QString sql = "SELECT * FROM laneip WHERE id = #{lid}";
-Qselect(sql) < 3 > lane;
+    Laneip *lane = NULL;
+    QString sql = "SELECT * FROM laneip WHERE id = #{lid}";
+    Qselect(sql) < 3 > lane;
 ```
 
-   		***注意：orm采用的办自动化内存管理,会在适当的时机释放掉此内存，千万不要收到delete,如果想要delete此指针，请使用此宏函数Qclear()。此指针不会保存很长时间，如果想长期保存，需要自己定义变量来保存。***
+***注意：orm采用的办自动化内存管理,会在适当的时机释放掉此内存，千万不要收到delete,如果想要delete此指针，请使用此宏函数Qclear()。此指针不会保存很长时间，如果想长期保存，需要自己定义变量来保存。***
 
 ​	3 . 输入与输出
 
@@ -301,12 +301,12 @@ Object_utils 此类将有三个静态成员函数分别为：
 
 ```c
 	static QString toString(T* src)   
-    static QString toString(QList<T*>& value)	
-    static void copy(T* src,T* dec) 
-    static void clear(T& data)
+	static QString toString(QList<T*>& value)	
+	static void copy(T* src,T* dec) 
+	static void clear(T& data)
 	static void clear(T* & data)
-    static bool isNULL(T& data)
-    static bool isClear(T& data)																				
+	static bool isNULL(T& data)
+	static bool isClear(T& data)																				
 ```
 
 1. 对于static QString toString(T* src)   )静态成员函数而言，返回的是定义orm类字符串格式化的内容,以"["开头，“]”结尾，中间为类成员咱开。
@@ -314,7 +314,7 @@ Object_utils 此类将有三个静态成员函数分别为：
 ​		此内容大致为:"[ id:3 ip:192.168.1.100 port:100 url:https://github.com/linuxguangbo/ entryno:111 etype:1 Status:1 description:正常 updatetime:2020-09-08T17:33:55 ]"
 
 ```c
-       		Laneip* lane;
+       		Laneip* lane = NULL;
             QString sql = "SELECT * FROM laneip where id = 2";
             Qselect(sql)  > lane;
             qDebug() << Object_utils::toString(lane);
@@ -332,7 +332,7 @@ Object_utils 此类将有三个静态成员函数分别为：
 3. 对于static void copy(T* src,T* dec) 成员而言，为复制定义为orm类的工具。因为继承于Qobject的类禁止拷贝复制，则可以用 copy函数来实现：
 
 ```c
-				Laneip *lane;
+				Laneip *lane = NULL;
 				QString sql = "SELECT * FROM laneip WHERE id = #{lid}";
 				Qselect(sql) < 3 > lane;
 				if (lane == NULL) {
@@ -355,7 +355,7 @@ Object_utils 此类将有三个静态成员函数分别为：
 ​	
 
 ```
-	    [MYSQL]   #暂时只要支持MYSQL
+		[MYSQL]   #暂时只要支持MYSQL
 		host=127.0.0.1	#数据库地址
 		port=3306	#数据库端口
 		dbname=test1	#数据库名

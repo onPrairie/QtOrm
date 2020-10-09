@@ -10,6 +10,8 @@
 ****************************************************************************/
 #pragma once
 #include "Object_qdbc.h"
+#include <qlist.h>
+#include <qobject.h>
 #ifdef WIN32  
 #pragma execution_character_set("utf-8")  
 #endif
@@ -18,15 +20,35 @@
 public: \
 	Q_INVOKABLE T get##member() { return member;} \
 	Q_INVOKABLE void set##member(T t) {member = t;} \
-	Q_INVOKABLE T member; 
+	T member; 
 
 #define Q_ATTR_ALIAS(T,member,alias) \
 	Q_PROPERTY(T alias READ get##member WRITE set##member) \
 public:	\
 	Q_INVOKABLE T get##member() { return member;} \
 	Q_INVOKABLE void set##member(T t) {member = t;} \
-	Q_INVOKABLE T member; 
+	T member; 
+ 
+//__ -¡· hide
+#define Q_ASSOCIATION_LIST(T) \
+public: \
+	Q_INVOKABLE QObject* __get##T(int n) { return (QObject*)__##T[n];} \
+	Q_INVOKABLE void __set##T() {T* mem = new T;__##T.append(mem);} \
+	Q_INVOKABLE void __getmember__##T##__2() {} \
+	QList<T*> get##T(){return __##T;} \
+private: \
+	QList<T*> __##T;
 
+//__ -¡· hide
+#define Q_ASSOCIATION_OBJECT(T) \
+public: \
+	Q_INVOKABLE QObject* __get##T() { return (QObject*)__##T;} \
+	Q_INVOKABLE void __set##T() {__##T = new T;} \
+	Q_INVOKABLE void __getmember__##T##__1() {} \
+	T* get##T(){return __##T;} \
+private: \
+	T* __##T;
+	
 
 #define  Qendl " "
 

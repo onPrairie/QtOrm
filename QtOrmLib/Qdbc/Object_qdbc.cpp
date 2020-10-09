@@ -52,6 +52,37 @@ int QdbcTemplate::countString(QString str)
 	}
 	return count;
 }
+void QdbcTemplate::querytable(QString & str)
+{
+	this->tablenames.clear();
+	//from ... where
+	int n  = str.indexOf("from", Qt::CaseInsensitive);
+	if (n < 0) {
+		return;
+	}
+	n += 4;
+	int end = str.indexOf("where", n, Qt::CaseInsensitive);
+	if (end < 0) {
+		return;
+	}
+	//end += 5;
+	if (end > n) {
+		QString strs = str.mid(n,end - n).trimmed();
+		tablenames = strs.split(",");
+		for (int i = 0; i < tablenames.size(); i++) {
+			for (int j = 0; j < tablenames[i].size(); j++) {
+				if (tablenames[i].at(j) == " ") {
+					tablenames[i] = tablenames[i].remove(j, tablenames[i].size()- j);
+				}
+			}
+		}
+	}
+	else
+	{
+		return;
+	}
+	//jion ... on
+}
 void QdbcTemplate::qtransactional()
 {
 	
@@ -105,6 +136,7 @@ void QdbcTemplate::args(QString value)
 {
 	//第一个输入参数
 	Count_arg = this->countString(value);
+	this->querytable(value);
 	mythread->m_data.append(value);
 	this->Out_count = this->In_count =  0;
 }
@@ -486,6 +518,32 @@ bool QdbcTemplate::invokefunc(QObject * value, QByteArray name, QVariant & t)
 		resfunc = false;
 	}
 	return resfunc;
+}
+int QdbcTemplate::invokefunc(QObject * value, QByteArray& name)
+{
+	int flag = 0;
+	QByteArray tablename =  tablenames[1].toLocal8Bit();
+	QByteArray tablenamefunc = "__getmember__"%tablename%"__1";
+	QString retVal;
+	bool resfunc = QMetaObject::invokeMethod(value, tablenamefunc);
+	if (resfunc == true) {
+		tablenamefunc = "__set"%tablename;
+		resfunc = QMetaObject::invokeMethod(value, tablenamefunc);
+		flag = 1;
+	}
+	return flag;
+}
+QObject * QdbcTemplate::invokefunc(QObject * value, QByteArray name, int index)
+{
+	QObject* retVal = NULL; 
+	if (index == -1) {
+		QByteArray tablename = tablenames[1].toLocal8Bit();
+		QByteArray tablenamefunc = "__get"%tablename;
+		
+		bool resfunc = QMetaObject::invokeMethod(value, tablenamefunc,Q_RETURN_ARG(QObject*, retVal));
+	}
+	return retVal;
+	//return resfunc;
 }
 void QdbcTemplate::QdbcTemplateClear()
 {

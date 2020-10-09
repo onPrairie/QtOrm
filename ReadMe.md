@@ -24,7 +24,8 @@
 
 4. 导入laneip表（网络检测表），数据库一定要utf-8格式，测试的数据表如下
 
-   ```CREATE TABLE NewTable (
+   ```
+   CREATE TABLE Laneip (
    id  int(11) NOT NULL AUTO_INCREMENT ,
    ip  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ,
    port  varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ,

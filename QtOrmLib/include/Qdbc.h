@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2020  The Qdbc Authors. All rights reserved.
-** Contact: 1104559085@qq.com
+** Contact: linuxguangbo@foxmail.com
 **
 ** This file is part of the Qdbc module of the Qdbc  Toolkit.
 ** Supported protocols£ºApache License 2.0

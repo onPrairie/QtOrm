@@ -246,7 +246,7 @@ public:
 	//retrun 0: 对象  return 1：QList<对象> 并分配内存
 	//name 为 key	keyname 为定义的class name 
 	int invokefunc(QObject* value, QByteArray& name, QByteArray& keyname);
-	QObject* invokefunc(QObject * value, QByteArray& keyname, int index);
+	QObject* invokefunc(QObject * value, QByteArray& keyname,int flag);
 	//线程分发
 	void thread_dispatch_flag4();
 
@@ -323,8 +323,7 @@ inline QdbcTemplate & QdbcTemplate::operator>(T & value)
 					tbname = tablenames[tbname];
 				}
 				if (mpclass.contains(tbname)) {
-					int tag = -1;
-					QObject* obj = this->invokefunc(&value, mpclass[tbname].toLatin1(), tag);
+					QObject* obj = this->invokefunc(&value, mpclass[tbname].toLatin1(),-1);
 					obj->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
 				}
 				else
@@ -332,8 +331,7 @@ inline QdbcTemplate & QdbcTemplate::operator>(T & value)
 					QByteArray keyname;
 					if (this->invokefunc(&value, tbname.toLatin1(), keyname) == 1) {
 						mpclass[tbname] = keyname;
-						int tag = -1;
-						QObject* obj = this->invokefunc(&value,keyname, tag);
+						QObject* obj = this->invokefunc(&value, keyname,-1);
 						adress[(int)obj] = obj;
 						obj->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
 					}
@@ -394,149 +392,370 @@ inline QdbcTemplate & QdbcTemplate::operator>(T & value)
 template<typename T>
 inline QdbcTemplate & QdbcTemplate::operator>(T *& value)
 {
-	if (value == NULL) {
-		//第一个输出参数
-		if (Out_count == 0) {
-			if (In_count != Count_arg) {
-				QString str = mythread->QDBC_id % "[error:] 读取参数失败 实际参数(<<)与sql语句参数不匹配:参数过多实际参数个数：" %QString::number(In_count) % "sql语句参数：" % QString::number(Count_arg - 1);
-				qFatal(str.toUtf8());
+	if (isUseUnion == true) {
+		if (value == NULL) {
+			//第一个输出参数
+			if (Out_count == 0) {
+				if (In_count != Count_arg) {
+					QString str = mythread->QDBC_id % "[error:] 读取参数失败 实际参数(<<)与sql语句参数不匹配:参数过多实际参数个数：" %QString::number(In_count) % "sql语句参数：" % QString::number(Count_arg - 1);
+					qFatal(str.toUtf8());
+					value = NULL;
+					return *this;
+				}
+
+				qInfo() << mythread->QDBC_id << " Qdbc perpare start<...";
+				mythread->do_sql(mythread->flag);
+				this->In_count = 0;
+
+			}
+			else
+			{
+				QString str = mythread->QDBC_id %  "只能有一个输出";
+				assert_args(str);
+			}
+			if (mythread->flag == 8) {
+				value = NULL;
+				qWarning() << mythread->QDBC_id % "数据库遇到了错误...";
+				return *this;
+			}
+			int size = mythread->res_data.size();
+			if (size == 0) {
 				value = NULL;
 				return *this;
 			}
+			value = New_adress<T>();
+			Object_utils::clear(value);
+			//fake -> class Name
+			QMap<QString, QString> mpclass;
+			while (this->Out_count < mythread->res_data.size()) {
+				QByteArray key = mythread->res_data[this->Out_count][this->Out_count_row].toByteArray();
+				bool b = value->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
 
-			qInfo() << mythread->QDBC_id << " Qdbc perpare start<...";
-			mythread->do_sql(mythread->flag);
-			this->In_count = 0;
+				if (b == false) {
+					QString tbname = tablenames[key];
+					if (tablenames.contains(tbname)) {
+						tbname = tablenames[tbname];
+					}
+					if (mpclass.contains(tbname)) {
+						QObject* obj = this->invokefunc(value, mpclass[tbname].toLatin1(),-1);
+						obj->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
+					}
+					else
+					{
+						QByteArray keyname;
+						if (this->invokefunc(value, tbname.toLatin1(), keyname) == 1) {
+							mpclass[tbname] = keyname;
+							QObject* obj = this->invokefunc(value, keyname,-1);
+							adress[(int)obj] = obj;
+							obj->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
+						}
+					}
+				}
 
+				this->Out_count_row += 2;
+				if (this->Out_count_row >= mythread->res_data[Out_count].size()) {
+					this->Out_count_row = 0;
+					this->Out_count++;
+					break;
+				}
+			}
+			qInfo() << mythread->QDBC_id << " Qdbc perpare end>";
+			this->Out_count++;
+			return *this;
 		}
 		else
 		{
-			QString str = mythread->QDBC_id %  "只能有一个输出";
-			assert_args(str);
-		}
-		if (mythread->flag == 8) {
-			value = NULL;
-			qWarning() << mythread->QDBC_id % "数据库遇到了错误...";
-			return *this;
-		}
-		int size = mythread->res_data.size();
-		if (size == 0) {
-			value = NULL;
-			return *this;
-		}
-		value = New_adress<T>();
-		Object_utils::clear(value);
-		while (this->Out_count < mythread->res_data.size()) {
-			QByteArray key = mythread->res_data[this->Out_count][this->Out_count_row].toByteArray();
-			value->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
+			//第一个输出参数
+			if (Out_count == 0) {
+				if (In_count != Count_arg) {
+					QString str = mythread->QDBC_id % "[error:] 读取参数失败 实际参数(<<)与sql语句参数不匹配:参数过多实际参数个数：" %QString::number(In_count) % "sql语句参数：" % QString::number(Count_arg - 1);
+					qFatal(str.toUtf8());
+					value = NULL;
+					return *this;
+				}
 
-			this->Out_count_row += 2;
-			if (this->Out_count_row >= mythread->res_data[Out_count].size()) {
-				this->Out_count_row = 0;
-				this->Out_count++;
-				break;
+				qInfo() << mythread->QDBC_id << " Qdbc perpare start<...";
+				mythread->do_sql(mythread->flag);
+				this->In_count = 0;
+
 			}
-		}
-		qInfo() << mythread->QDBC_id << " Qdbc perpare end>";
-		this->Out_count++;
-		return *this;
-	}
-	else
-	{
-		//第一个输出参数
-		if (Out_count == 0) {
-			if (In_count != Count_arg) {
-				QString str = mythread->QDBC_id % "[error:] 读取参数失败 实际参数(<<)与sql语句参数不匹配:参数过多实际参数个数：" %QString::number(In_count) % "sql语句参数：" % QString::number(Count_arg - 1);
-				qFatal(str.toUtf8());
+			else
+			{
+				QString str = mythread->QDBC_id %  "只能有一个输出";
+				assert_args(str);
+			}
+			if (mythread->flag == 8) {
+				value = NULL;
+				qWarning() << mythread->QDBC_id % "数据库遇到了错误...";
+				return *this;
+			}
+			int size = mythread->res_data.size();
+			if (size == 0) {
 				value = NULL;
 				return *this;
 			}
+			//value = New_adress<T>();
+			Object_utils::clear(value);
+			QMap<QString, QString> mpclass;
+			while (this->Out_count < mythread->res_data.size()) {
+				QByteArray key = mythread->res_data[this->Out_count][this->Out_count_row].toByteArray();
+				bool b = value->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
 
-			qInfo() << mythread->QDBC_id << " Qdbc perpare start<...";
-			mythread->do_sql(mythread->flag);
-			this->In_count = 0;
+				if (b == false) {
+					QString tbname = tablenames[key];
+					if (tablenames.contains(tbname)) {
+						tbname = tablenames[tbname];
+					}
+					if (mpclass.contains(tbname)) {
+						QObject* obj = this->invokefunc(value, mpclass[tbname].toLatin1(),-1);
+						obj->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
+					}
+					else
+					{
+						QByteArray keyname;
+						if (this->invokefunc(value, tbname.toLatin1(), keyname) == 1) {
+							mpclass[tbname] = keyname;
+							QObject* obj = this->invokefunc(value, keyname, -1);
+							adress[(int)obj] = obj;
+							obj->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
+						}
+					}
+				}
 
+				this->Out_count_row += 2;
+				if (this->Out_count_row >= mythread->res_data[Out_count].size()) {
+					this->Out_count_row = 0;
+					this->Out_count++;
+					break;
+				}
+			}
+			qInfo() << mythread->QDBC_id << " Qdbc perpare end>";
+			this->Out_count++;
+			return *this;
+		}
+	}
+	else {
+		if (value == NULL) {
+			//第一个输出参数
+			if (Out_count == 0) {
+				if (In_count != Count_arg) {
+					QString str = mythread->QDBC_id % "[error:] 读取参数失败 实际参数(<<)与sql语句参数不匹配:参数过多实际参数个数：" %QString::number(In_count) % "sql语句参数：" % QString::number(Count_arg - 1);
+					qFatal(str.toUtf8());
+					value = NULL;
+					return *this;
+				}
+
+				qInfo() << mythread->QDBC_id << " Qdbc perpare start<...";
+				mythread->do_sql(mythread->flag);
+				this->In_count = 0;
+
+			}
+			else
+			{
+				QString str = mythread->QDBC_id %  "只能有一个输出";
+				assert_args(str);
+			}
+			if (mythread->flag == 8) {
+				value = NULL;
+				qWarning() << mythread->QDBC_id % "数据库遇到了错误...";
+				return *this;
+			}
+			int size = mythread->res_data.size();
+			if (size == 0) {
+				value = NULL;
+				return *this;
+			}
+			value = New_adress<T>();
+			Object_utils::clear(value);
+			while (this->Out_count < mythread->res_data.size()) {
+				QByteArray key = mythread->res_data[this->Out_count][this->Out_count_row].toByteArray();
+				value->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
+
+				this->Out_count_row += 2;
+				if (this->Out_count_row >= mythread->res_data[Out_count].size()) {
+					this->Out_count_row = 0;
+					this->Out_count++;
+					break;
+				}
+			}
+			qInfo() << mythread->QDBC_id << " Qdbc perpare end>";
+			this->Out_count++;
+			return *this;
 		}
 		else
 		{
-			QString str = mythread->QDBC_id %  "只能有一个输出";
-			assert_args(str);
-		}
-		if (mythread->flag == 8) {
-			value = NULL;
-			qWarning() << mythread->QDBC_id % "数据库遇到了错误...";
-			return *this;
-		}
-		int size = mythread->res_data.size();
-		if (size == 0) {
-			value = NULL;
-			return *this;
-		}
-		//value = New_adress<T>();
-		Object_utils::clear(value);
-		while (this->Out_count < mythread->res_data.size()) {
-			QByteArray key = mythread->res_data[this->Out_count][this->Out_count_row].toByteArray();
-			value->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
+			//第一个输出参数
+			if (Out_count == 0) {
+				if (In_count != Count_arg) {
+					QString str = mythread->QDBC_id % "[error:] 读取参数失败 实际参数(<<)与sql语句参数不匹配:参数过多实际参数个数：" %QString::number(In_count) % "sql语句参数：" % QString::number(Count_arg - 1);
+					qFatal(str.toUtf8());
+					value = NULL;
+					return *this;
+				}
 
-			this->Out_count_row += 2;
-			if (this->Out_count_row >= mythread->res_data[Out_count].size()) {
-				this->Out_count_row = 0;
-				this->Out_count++;
-				break;
+				qInfo() << mythread->QDBC_id << " Qdbc perpare start<...";
+				mythread->do_sql(mythread->flag);
+				this->In_count = 0;
+
 			}
+			else
+			{
+				QString str = mythread->QDBC_id %  "只能有一个输出";
+				assert_args(str);
+			}
+			if (mythread->flag == 8) {
+				value = NULL;
+				qWarning() << mythread->QDBC_id % "数据库遇到了错误...";
+				return *this;
+			}
+			int size = mythread->res_data.size();
+			if (size == 0) {
+				value = NULL;
+				return *this;
+			}
+			//value = New_adress<T>();
+			Object_utils::clear(value);
+			while (this->Out_count < mythread->res_data.size()) {
+				QByteArray key = mythread->res_data[this->Out_count][this->Out_count_row].toByteArray();
+				value->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
+
+				this->Out_count_row += 2;
+				if (this->Out_count_row >= mythread->res_data[Out_count].size()) {
+					this->Out_count_row = 0;
+					this->Out_count++;
+					break;
+				}
+			}
+			qInfo() << mythread->QDBC_id << " Qdbc perpare end>";
+			this->Out_count++;
+			return *this;
 		}
-		qInfo() << mythread->QDBC_id << " Qdbc perpare end>";
-		this->Out_count++;
-		return *this;
 	}
-	
 }
 template<typename T>
 inline QdbcTemplate & QdbcTemplate::operator >(QList<T*>& value)
 {
-	//第一个输出参数
-	if (Out_count == 0) {
-		if (In_count != Count_arg) {
-			QString str = mythread->QDBC_id  % "[error:] 读取参数失败 实际参数(<)与sql语句参数不匹配:参数过多  实际参数(<)个数：" %QString::number(In_count - 1) % "sql语句参数：" % QString::number(Count_arg - 2);
+	if (isUseUnion == true) {
+		//第一个输出参数
+		if (Out_count == 0) {
+			if (In_count != Count_arg) {
+				QString str = mythread->QDBC_id  % "[error:] 读取参数失败 实际参数(<)与sql语句参数不匹配:参数过多  实际参数(<)个数：" %QString::number(In_count - 1) % "sql语句参数：" % QString::number(Count_arg - 2);
+				assert_args(str);
+				value.clear();
+				return *this;
+			}
+
+			qInfo() << mythread->QDBC_id << " Qdbc perpare start<...";
+			mythread->do_sql(mythread->flag);
+			this->In_count = 0;
+
+		}
+		else
+		{
+			QString str = mythread->QDBC_id %  "只能有一个输出";
 			assert_args(str);
-			value.clear();
+		}
+		if (mythread->flag == 8) {
+			qWarning() << mythread->QDBC_id %  "数据库遇到了错误...";
 			return *this;
 		}
+		T* t1 = New_adress<T>();
+		Object_utils::clear(t1);
+		QMap<QString, QString> mpclass;
+		while (this->Out_count < mythread->res_data.size()) {
+			QByteArray key = mythread->res_data[this->Out_count][this->Out_count_row].toByteArray();
+			bool b = t1->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
 
-		qInfo() << mythread->QDBC_id << " Qdbc perpare start<...";
-		mythread->do_sql(mythread->flag);
-		this->In_count = 0;
+			if (b == false) {
+				QString tbname = tablenames[key];
+				if (tablenames.contains(tbname)) {
+					tbname = tablenames[tbname];
+				}
+				if (mpclass.contains(tbname)) {
+					QObject* obj = this->invokefunc(t1, mpclass[tbname].toLatin1(),-1);
+					obj->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
+				}
+				else
+				{
+					QByteArray keyname;
+					if (this->invokefunc(t1, tbname.toLatin1(), keyname) == 1) {
+						mpclass[tbname] = keyname;
+						QObject* obj = this->invokefunc(t1, keyname, -1);
+						adress[(int)obj] = obj;
+						obj->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
+					}
+				}
+			}
 
+			this->Out_count_row += 2;
+			if (this->Out_count_row >= mythread->res_data[Out_count].size()) {
+				this->Out_count_row = 0;
+				this->Out_count++;
+				value.append(t1);
+				QStringList ls = mpclass.keys();
+				t1 = New_adress<T>();
+				for (int i = 0; i < ls.length();i++)
+				{
+					this->invokefunc(t1, ls[i].toLatin1(), mpclass[ls[i]].toLatin1());
+				}
+				Object_utils::clear(t1);
+			}
+			if (this->Out_count == mythread->res_data.size()) {
+				delete_address(t1);
+				qInfo() << mythread->QDBC_id << " Qdbc perpare end>";
+				this->Out_count++;
+			}
+		}
+		return *this;
+		// TODO: 在此处插入 return 语句
 	}
 	else
 	{
-		QString str = mythread->QDBC_id %  "只能有一个输出";
-		assert_args(str);
-	}
-	if (mythread->flag == 8) {
-		qWarning() << mythread->QDBC_id %  "数据库遇到了错误...";
-		return *this;
-	}
-	T* t1 = New_adress<T>();
-	Object_utils::clear(t1);
-	while (this->Out_count < mythread->res_data.size()) {
-		QByteArray key = mythread->res_data[this->Out_count][this->Out_count_row].toByteArray();
-		t1->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
+		//第一个输出参数
+		if (Out_count == 0) {
+			if (In_count != Count_arg) {
+				QString str = mythread->QDBC_id  % "[error:] 读取参数失败 实际参数(<)与sql语句参数不匹配:参数过多  实际参数(<)个数：" %QString::number(In_count - 1) % "sql语句参数：" % QString::number(Count_arg - 2);
+				assert_args(str);
+				value.clear();
+				return *this;
+			}
 
-		this->Out_count_row += 2;
-		if (this->Out_count_row >= mythread->res_data[Out_count].size()) {
-			this->Out_count_row = 0;
-			this->Out_count++;
-			value.append(t1);
-			t1 = New_adress<T>();
-			Object_utils::clear(t1);
+			qInfo() << mythread->QDBC_id << " Qdbc perpare start<...";
+			mythread->do_sql(mythread->flag);
+			this->In_count = 0;
+
 		}
-		if (this->Out_count == mythread->res_data.size()) {
-			delete_address(t1);
-			qInfo() << mythread->QDBC_id << " Qdbc perpare end>";
-			this->Out_count++;
+		else
+		{
+			QString str = mythread->QDBC_id %  "只能有一个输出";
+			assert_args(str);
 		}
+		if (mythread->flag == 8) {
+			qWarning() << mythread->QDBC_id %  "数据库遇到了错误...";
+			return *this;
+		}
+		T* t1 = New_adress<T>();
+		Object_utils::clear(t1);
+		while (this->Out_count < mythread->res_data.size()) {
+			QByteArray key = mythread->res_data[this->Out_count][this->Out_count_row].toByteArray();
+			t1->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
+
+			this->Out_count_row += 2;
+			if (this->Out_count_row >= mythread->res_data[Out_count].size()) {
+				this->Out_count_row = 0;
+				this->Out_count++;
+				value.append(t1);
+				t1 = New_adress<T>();
+				Object_utils::clear(t1);
+			}
+			if (this->Out_count == mythread->res_data.size()) {
+				delete_address(t1);
+				qInfo() << mythread->QDBC_id << " Qdbc perpare end>";
+				this->Out_count++;
+			}
+		}
+		return *this;
+		// TODO: 在此处插入 return 语句
 	}
-	return *this;
-	// TODO: 在此处插入 return 语句
+
 }

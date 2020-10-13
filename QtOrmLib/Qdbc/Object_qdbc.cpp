@@ -5,6 +5,32 @@
 #include <QMetaType>
 #include <QMetaProperty>
 #include "../include/Qdbc.h"
+int qdbc_stringindex(QString& str,int pos) {
+	int index = -1;
+	for (int i = pos; i < str.length(); i++) {
+		if (str[i] == ',' || str[i] == ' ') {
+			index = i;
+			break;
+		}
+	}
+	return index;
+}
+int qdbc_stringresverindex(QString& str, int pos) {
+	int index = -1;
+	for (int i = pos; i > 1; i--) {
+		if (str[i] == ',' || str[i] == ' ') {
+			index = i;
+			break;
+		}
+	}
+	return index;
+}
+void qdbc_stringformat(QString& str) {
+	if (str[0] == '`') {
+		str.remove('`');
+	}
+	str = str.toLower();
+}
 QHash<int, QdbcTemplate*> QdbcTemplate::__instance__;
 QdbcTemplate::QdbcTemplate(QObject *parent)
 	: QObject(parent)
@@ -55,6 +81,7 @@ int QdbcTemplate::countString(QString str)
 void QdbcTemplate::querytable(QString & str)
 {
 	this->tablenames.clear();
+	isUseUnion = false;
 	//from ... where
 	int n  = str.indexOf("from", Qt::CaseInsensitive);
 	if (n < 0) {
@@ -65,15 +92,45 @@ void QdbcTemplate::querytable(QString & str)
 	if (end < 0) {
 		return;
 	}
-	//end += 5;
+	QStringList ls;
 	if (end > n) {
 		QString strs = str.mid(n,end - n).trimmed();
-		tablenames = strs.split(",");
-		for (int i = 0; i < tablenames.size(); i++) {
-			for (int j = 0; j < tablenames[i].size(); j++) {
-				if (tablenames[i].at(j) == " ") {
-					tablenames[i] = tablenames[i].remove(j, tablenames[i].size()- j);
+		ls = strs.split(",");
+		if (ls.size() > 1) {
+			isUseUnion = true;
+			for (int i = 0; i < ls.size(); i++) {
+				for (int j = 0; j < ls[i].size(); j++) {
+					if (ls[i].at(j) == ' ') {
+						QString str = ls[i].left(j);
+						QString str1 = ls[i].right(ls[i].size() - j).trimmed();
+						qdbc_stringformat(str);
+						qdbc_stringformat(str1);
+						if (str1 != "") {
+							tablenames[str1] = str;
+						}
+						break;
+					}
 				}
+			}
+		}
+		ls.clear();
+		if (isUseUnion == true) {
+			int t = 0, t1 = 0;
+			while (true)
+			{
+				t = str.indexOf(".", t1);
+				if (t > n || t < 0) {
+					break;
+				}
+				t1 = qdbc_stringresverindex(str, t - 1);
+				QString parent = str.mid(t1 + 1, t - t1 - 1);
+				t1 = qdbc_stringindex(str, t + 1);
+				QString child = str.mid(t + 1, t1 - t - 1);
+				qdbc_stringformat(parent);
+				qdbc_stringformat(child);
+				//×Ó-¡·¸¸
+				tablenames[child] = parent;
+
 			}
 		}
 	}
@@ -519,28 +576,41 @@ bool QdbcTemplate::invokefunc(QObject * value, QByteArray name, QVariant & t)
 	}
 	return resfunc;
 }
-int QdbcTemplate::invokefunc(QObject * value, QByteArray& name)
+int QdbcTemplate::invokefunc(QObject * value, QByteArray& name,QByteArray& keyname)
 {
+	QString tbname = name;
+	
 	int flag = 0;
-	QByteArray tablename =  tablenames[1].toLocal8Bit();
-	QByteArray tablenamefunc = "__getmember__"%tablename%"__1";
-	QString retVal;
-	bool resfunc = QMetaObject::invokeMethod(value, tablenamefunc);
-	if (resfunc == true) {
-		tablenamefunc = "__set"%tablename;
-		resfunc = QMetaObject::invokeMethod(value, tablenamefunc);
-		flag = 1;
+	const QMetaObject* theMetaObject = value->metaObject();
+	QByteArray funcName;
+	for (int i = 5; i < theMetaObject->methodCount(); i++)
+	{
+		QMetaMethod oneMethod = theMetaObject->method(i);
+		funcName = oneMethod.methodSignature();
+		if (funcName.indexOf("__getmember__"%tbname) > 0) {
+			break;
+		}
 	}
+	
+	int length = funcName.size();
+	keyname = funcName.mid(13, length - 13 - 2 - 3);
+	int num = 13 + keyname.size() + 2;
+	QByteArray arr =  funcName.mid(num,1);
+	flag = arr.toInt();
+
+	QByteArray  tablenamefunc = "__set"%keyname;
+	bool resfunc = QMetaObject::invokeMethod(value, tablenamefunc);
+	flag = 1;
 	return flag;
 }
-QObject * QdbcTemplate::invokefunc(QObject * value, QByteArray name, int index)
+QObject * QdbcTemplate::invokefunc(QObject * value,QByteArray& keyname, int index)
 {
 	QObject* retVal = NULL; 
 	if (index == -1) {
-		QByteArray tablename = tablenames[1].toLocal8Bit();
+		QByteArray tablename = keyname;
 		QByteArray tablenamefunc = "__get"%tablename;
-		
-		bool resfunc = QMetaObject::invokeMethod(value, tablenamefunc,Q_RETURN_ARG(QObject*, retVal));
+
+		bool resfunc = QMetaObject::invokeMethod(value, tablenamefunc, Q_RETURN_ARG(QObject*, retVal));
 	}
 	return retVal;
 	//return resfunc;

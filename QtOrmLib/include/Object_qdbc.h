@@ -10,6 +10,7 @@
 #include <QStringBuilder>
 #include <QMetaMethod>
 #include <QFileInfo>
+#include <QMultiHash>
 #include "analysis_container.h"
 #include "qtormlib_global.h"
 #ifdef WIN32  
@@ -137,7 +138,9 @@ private:
 	
 	//int change_in; //1,2  判断 (Qselect < t > t) 格式
 	int countString(QString str);
-	QStringList tablenames;
+	QHash<QString,QString> tablenames;	//存储别名
+	bool isUseUnion;
+	//对于关联查询，不支持select *
 	void querytable(QString& str);
 	//********************
 	int Loglevel = 0;
@@ -240,8 +243,10 @@ public:
 	QdbcTemplate& operator > (QList<T*>& value);
 
 	bool invokefunc(QObject*  value,QByteArray name,QVariant& t);
-	int invokefunc(QObject* value, QByteArray& name);
-	QObject* invokefunc(QObject* value, QByteArray name, int index);
+	//retrun 0: 对象  return 1：QList<对象> 并分配内存
+	//name 为 key	keyname 为定义的class name 
+	int invokefunc(QObject* value, QByteArray& name, QByteArray& keyname);
+	QObject* invokefunc(QObject * value, QByteArray& keyname, int index);
 	//线程分发
 	void thread_dispatch_flag4();
 
@@ -285,7 +290,7 @@ inline QdbcTemplate & QdbcTemplate::operator>(T & value)
 {
 	Object_utils::clear(value);
 	//第一个输出参数
-	if (tablenames.size() > 1) {
+	if (isUseUnion == true) {
 		if (Out_count == 0) {
 			if (In_count != Count_arg) {
 				QString str = mythread->QDBC_id % "[error:] 读取参数失败 实际参数(<<)与sql语句参数不匹配:参数过多实际参数个数：" %QString::number(In_count) % "sql语句参数：" % QString::number(Count_arg - 1);
@@ -307,21 +312,31 @@ inline QdbcTemplate & QdbcTemplate::operator>(T & value)
 			qWarning() << mythread->QDBC_id % "数据库遇到了错误...";
 			return *this;
 		}
-		QSet<QString> set;
+		//fake -> class Name
+		QMap<QString,QString> mpclass;
 		while (this->Out_count < mythread->res_data.size()) {
 			QByteArray key = mythread->res_data[this->Out_count][this->Out_count_row].toByteArray();
 			bool b = value.setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
 			if (b == false) {
-				if (set.contains(key)) {
+				QString tbname = tablenames[key];
+				if (tablenames.contains(tbname)) {
+					tbname = tablenames[tbname];
+				}
+				if (mpclass.contains(tbname)) {
 					int tag = -1;
-					QObject* obj = this->invokefunc(&value, key, tag);
+					QObject* obj = this->invokefunc(&value, mpclass[tbname].toLatin1(), tag);
 					obj->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
 				}
-				if (this->invokefunc(&value, key) == 1) {
-					set.insert(key);
-					int tag = -1;
-					QObject* obj =  this->invokefunc(&value, key, tag);
-					obj->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
+				else
+				{
+					QByteArray keyname;
+					if (this->invokefunc(&value, tbname.toLatin1(), keyname) == 1) {
+						mpclass[tbname] = keyname;
+						int tag = -1;
+						QObject* obj = this->invokefunc(&value,keyname, tag);
+						adress[(int)obj] = obj;
+						obj->setProperty(key, mythread->res_data[this->Out_count][this->Out_count_row + 1]);
+					}
 				}
 			}
 			

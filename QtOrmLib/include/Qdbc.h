@@ -91,8 +91,8 @@ private: \
 
 #define QBye()	QdbcTemplate::singleinstance()->QdbcTemplateClear()
 
-#define QMajor_version "20.09"
-#define Qminor_version "016"
+#define QMajor_version "20.10"
+#define Qminor_version "011"
 #define Qstable   "s"
 #define Qtest     "c"
 

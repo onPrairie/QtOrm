@@ -9,27 +9,47 @@
 ** Please refer to the readme file for instructions
 ****************************************************************************/
 #pragma once
+#ifndef QDBC_H
+#define QDBC_H
 #include "Object_qdbc.h"
-#include <qlist.h>
-#include <qobject.h>
+// #include <qlist.h>
+// #include <QObject>
 #ifdef WIN32  
 #pragma execution_character_set("utf-8")  
 #endif
+
+
+#define QOBJECTDEFS_H
+#define  __OBJECT 0x01
+#define  __LIST   0x02
+// __ -》 hide  函数以__开头的视为隐藏，不能调用
+#define Q_ATTRss(T,member) \
+	Q_PROPERTY(int id READ getid WRITE setid) \
+public: \
+	Q_INVOKABLE T get##member() { return member;} \
+	Q_INVOKABLE void set##member(T t) {member = t;} \
+	Q_INVOKABLE char* __getretrunname__##member() { return #T;} \
+	T member;
+
+
 #define Q_ATTR(T,member) \
 	Q_PROPERTY(T member READ get##member WRITE set##member) \
 public: \
 	Q_INVOKABLE T get##member() { return member;} \
 	Q_INVOKABLE void set##member(T t) {member = t;} \
-	T member; 
+	Q_INVOKABLE char* __getretrunname__##member() { return #T;} \
+	T member;
 
+// __ -》 hide  函数以__开头的视为隐藏，不能调用
 #define Q_ATTR_ALIAS(T,member,alias) \
 	Q_PROPERTY(T alias READ get##member WRITE set##member) \
 public:	\
+	Q_INVOKABLE char* __getretrunname__##member() { return #T;} \
 	Q_INVOKABLE T get##member() { return member;} \
 	Q_INVOKABLE void set##member(T t) {member = t;} \
 	T member; 
  
-//__ -》 hide
+// __ -》 hide  函数以__开头的视为隐藏，不能调用
 #define Q_ASSOCIATION_LIST(T) \
 public: \
 	Q_INVOKABLE QObject* __get##T(int n) { return (QObject*)__##T[n];} \
@@ -39,17 +59,25 @@ public: \
 private: \
 	QList<T*> __##T;
 
-//__ -》 hide
-#define Q_ASSOCIATION_OBJECT(T) \
+// __ -》 hide 函数以__开头的视为隐藏，不能调用
+#define Q_ASSOCIATION_OBJECT(T2) \
 public: \
-	Q_INVOKABLE QObject* __get##T() { return (QObject*)__##T;} \
-	Q_INVOKABLE void __set##T() {__##T = new T;} \
-	Q_INVOKABLE void __getmember__##T##__1() {} \
-	T* get##T(){return __##T;} \
+	Q_INVOKABLE QObject* __get##T2(int _n) { return (QObject*)__##T2;} \
+	Q_INVOKABLE void __set##T2() {__##T2 = new T2;} \
+	Q_INVOKABLE int __getmember__##T2__type__() {return __OBJECT;} \
+	T2* get##T2(){return __##T2;} \
 private: \
-	T* __##T;
-	
+	T2* __##T2;
 
+//column,property
+#define result_Id(column,...) 
+#define result(column,...) 
+#define one(classname,...) 
+#define many(classname,...)
+
+#define  Qresults(...)     QdbcTemplate::singleinstance()->Validation_collection("@one(0,{"#__VA_ARGS__"})")
+
+#define	 Qopt_ignore _ 
 #define  Qendl " "
 
 
@@ -92,7 +120,7 @@ private: \
 #define QBye()	QdbcTemplate::singleinstance()->QdbcTemplateClear()
 
 #define QMajor_version "20.10"
-#define Qminor_version "011"
+#define Qminor_version "013"
 #define Qstable   "s"
 #define Qtest     "c"
 
@@ -103,6 +131,9 @@ private: \
 #define  QSqlite3 "QSQLITE"  
 #define  QSqlite2 "QSQLITE2"
 
+#define  QMaxLength_Qresults 1024
+#define  QMaxLength_field  100
+
 //当前所支持的数据库
 #define  Qcurrentdatebase (QMysql)
 
@@ -111,6 +142,8 @@ private: \
 	Qconfig t;  \
 	t.setPath(path,name); \
 }while (0) 
+
+
 #define  Hint 0
 #if Hiint
 	// T* 为指针类型，需要继承于Qobject并且使用Q_ATTR或者Q_ATTR_ALIAS宏定义的属性， 返回格式化字符串
@@ -127,4 +160,8 @@ private: \
 	Object_utils::isNULL(T& data)
 	//T&  data 要继承于Qobject并且使用Q_ATTR或者Q_ATTR_ALIAS宏定义的属性，此方法用于判断属性是否被清除
 	Object_utils::isClear(T& data)
+	//T&  data 要继承于Qobject并且使用Q_ATTR或者Q_ATTR_ALIAS宏定义的属性，此方法用于判断属性是否相等
+	Object_utils::compare(T* src, T* dec)
+#endif
+
 #endif

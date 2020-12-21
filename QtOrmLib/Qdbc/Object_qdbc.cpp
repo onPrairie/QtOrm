@@ -78,10 +78,253 @@ int QdbcTemplate::countString(QString str)
 	}
 	return count;
 }
+#define  COMPPARE_analysis_macro \
+	for (int j = i + 1; j < max_len - 1; j++) {	pQone++; if (str[j] != *pQone) {assert_args("Bad macro format");}}
+void QdbcTemplate::analysis_macro(char* str)
+{
+	char* pQresult_id = "@result_id";
+	char* pQresult = "@result";
+	char* pQone = "@one";
+	char* pQmany = "@many";
+	
+	int len_macro = strlen(str);
+	char ch;
+	int i = 0;
+	
+	int level = -1;
+	int flag = 2; //输入1:list 还是 2:object
+	int v_start = 0;
+	QString col;
+	bool isid;
+	int macro_row_over = 0; // one many:1    other:2
+	bool isentry_deep = false; 
+	QString parent_names;
+	QHash<QString,ElemsXmlObj*> h;
+	int argsnum = 0; //支持的最大参数
+	QStringList parentls; //存放id与父名
+	while ((ch = str[i]) != '\0')
+	{
+		switch (ch)
+		{
+		case '@': 
+		{
+			if (i + strlen(pQresult_id)  > len_macro) {
+				assert_args("Bad macro format");
+			}
+			if (str[i + strlen(pQresult_id) ] == '(') { //result_id
+				int max_len = strlen(pQresult_id);
+				i += max_len;
+				isid = true;
+				macro_row_over = 1;
+			}
+			else if(str[i + strlen(pQresult) ]== '(') //result
+			{
+				int max_len = strlen(pQresult);
+				i += max_len;
+				isid = false;
+				macro_row_over = 1;
+			}
+			else if (str[i + strlen(pQone) ] == '(') //one
+			{
+				int max_len = strlen(pQone);
+				//COMPPARE_analysis_macro
+					i += max_len;
+					isid = false;
+					flag = 2;
+					macro_row_over = 2;
+			}
+			else if (str[i + strlen(pQmany)] == '(') //many
+			{
+				int max_len = strlen(pQmany);
+				i += max_len;
+				isid = false;
+				flag = 1;
+				macro_row_over = 2;
+			}
+			else
+			{
+				assert_args("Bad macro format");
+			}
+		}
+			break;
+		case '(':
+		{
+			i++;
+			v_start = i;
+			if (macro_row_over == 1) {
+				argsnum++;
+			}
+		}
+			break;
+		case ',': //many split
+		{
+			if (macro_row_over == 1) {
+				argsnum++;
+			}
+			switch (macro_row_over)
+			{
+			case 1:
+			{
+				char tmp[QMaxLength_field] = { 0 };
+				memcpy(tmp, &str[v_start], i - v_start);
+				col = QString(tmp).trimmed();
+				if (tablenames.contains(col)) {
+					assert_args("Duplicate fields ");
+				}
+				//QString str = QString()
+				i++;
+				v_start = i;
+			}
+			break;
+			case 2:
+			{
+				char tmp[QMaxLength_field] = { 0 };
+				memcpy(tmp, &str[v_start], i - v_start);
+				parent_names = QString(tmp).trimmed();
+				parentls.append(parent_names);
+				//QString str = QString()
+				i++;
+				//v_start = i;
+			}
+				break;
+			default:
+				i++;
+				break;
+			}
+		}
+			break;
+		case  '{':
+		{
+			level++;
+			i++;
+			v_start = i;
+		}
+			break;
+		case  '}':
+		{
+			i++;
+			parentls.removeAt(level);
+			level--;	
+		}
+			break;
+		case ')':
+		{
+			if (macro_row_over == 1) {
+				if (argsnum > 2) {
+					assert_args("Bad macro format" );
+				}
+				char tmp[QMaxLength_field] = { 0 };
+				memcpy(tmp, &str[v_start], i - v_start);
+				if (argsnum == 1) {
+					col = QString(tmp).trimmed();
+				}
+				ElemsXml el; // = new ElemsXml;
+				el.property_name = QString(tmp).trimmed();
+				el.parent = parent_names;
+				el.level = level;
+				el.flag = flag;
+				el.isId = isid;
+				el.id_value = "";
+				el.value = NULL;
+				tablenames[col] = el;
+				if (h.contains(parent_names)) {
+					//h[col] = h[parent_names];
+				}
+				else
+				{
+					ElemsXmlObj* obj = new ElemsXmlObj;
+					obj->parents = parentls;
+					obj->value = NULL;
+					h[el.parent] = obj;
+				}
+				
+			}
+			i++;
+			macro_row_over = 0;
+			argsnum = 0;
+			
+		}
+			break;
+		case ' ': case '\t': case '\n': 
+			qDebug() << "hhh";
+			i++;
+			break;
+		//value
+		default: 
+			i++;
+			break;
+		}
+		
+	}
+	if (parentls.size() > 0) {
+		assert_args("Bad macro format");
+	}
+	tablenameobjs = h;
+}
 void QdbcTemplate::querytable(QString & str)
 {
+	//this->tablenames.clear();
+	//isUseUnion = false;
+	////from ... where
+	//int n  = str.indexOf("from", Qt::CaseInsensitive);
+	//if (n < 0) {
+	//	return;
+	//}
+	//n += 4;
+	//int end = str.indexOf("where", n, Qt::CaseInsensitive);
+	//if (end < 0) {
+	//	return;
+	//}
+	//QStringList ls;
+	//if (end > n) {
+	//	QString strs = str.mid(n,end - n).trimmed();
+	//	ls = strs.split(",");
+	//	if (ls.size() > 1) {
+	//		isUseUnion = true;
+	//		for (int i = 0; i < ls.size(); i++) {
+	//			for (int j = 0; j < ls[i].size(); j++) {
+	//				if (ls[i].at(j) == ' ') {
+	//					QString str = ls[i].left(j);
+	//					QString str1 = ls[i].right(ls[i].size() - j).trimmed();
+	//					qdbc_stringformat(str);
+	//					qdbc_stringformat(str1);
+	//					if (str1 != "") {
+	//						tablenames[str1] = str;
+	//					}
+	//					break;
+	//				}
+	//			}
+	//		}
+	//	}
+	//	ls.clear();
+	//	if (isUseUnion == true) {
+	//		int t = 0, t1 = 0;
+	//		while (true)
+	//		{
+	//			t = str.indexOf(".", t1);
+	//			if (t < 0) {
+	//				break;
+	//			}
+	//			t1 = qdbc_stringresverindex(str, t - 1);
+	//			QString parent = str.mid(t1 + 1, t - t1 - 1);
+	//			t1 = qdbc_stringindex(str, t + 1);
+	//			QString child = str.mid(t + 1, t1 - t - 1);
+	//			qdbc_stringformat(parent);
+	//			qdbc_stringformat(child);
+	//			//子-》父
+	//			tablenames[child] = parent;
+
+	//		}
+	//	}
+	//}
+	//else
+	//{
+	//	return;
+	//}
+	//jion ... on
+	//！不分析sql语句
+
 	this->tablenames.clear();
-	isUseUnion = false;
 	//from ... where
 	int n  = str.indexOf("from", Qt::CaseInsensitive);
 	if (n < 0) {
@@ -94,51 +337,20 @@ void QdbcTemplate::querytable(QString & str)
 	}
 	QStringList ls;
 	if (end > n) {
-		QString strs = str.mid(n,end - n).trimmed();
+		QString strs = str.mid(n, end - n).trimmed();
 		ls = strs.split(",");
 		if (ls.size() > 1) {
-			isUseUnion = true;
 			for (int i = 0; i < ls.size(); i++) {
 				for (int j = 0; j < ls[i].size(); j++) {
 					if (ls[i].at(j) == ' ') {
 						QString str = ls[i].left(j);
-						QString str1 = ls[i].right(ls[i].size() - j).trimmed();
-						qdbc_stringformat(str);
-						qdbc_stringformat(str1);
-						if (str1 != "") {
-							tablenames[str1] = str;
-						}
+						//tablenames.append(str.remove('`').toLatin1());
 						break;
 					}
 				}
 			}
 		}
-		ls.clear();
-		if (isUseUnion == true) {
-			int t = 0, t1 = 0;
-			while (true)
-			{
-				t = str.indexOf(".", t1);
-				if (t > n || t < 0) {
-					break;
-				}
-				t1 = qdbc_stringresverindex(str, t - 1);
-				QString parent = str.mid(t1 + 1, t - t1 - 1);
-				t1 = qdbc_stringindex(str, t + 1);
-				QString child = str.mid(t + 1, t1 - t - 1);
-				qdbc_stringformat(parent);
-				qdbc_stringformat(child);
-				//子-》父
-				tablenames[child] = parent;
-
-			}
-		}
 	}
-	else
-	{
-		return;
-	}
-	//jion ... on
 }
 void QdbcTemplate::qtransactional()
 {
@@ -193,7 +405,7 @@ void QdbcTemplate::args(QString value)
 {
 	//第一个输入参数
 	Count_arg = this->countString(value);
-	this->querytable(value);
+	//this->querytable(value);
 	mythread->m_data.append(value);
 	this->Out_count = this->In_count =  0;
 }
@@ -506,6 +718,18 @@ QdbcTemplate& QdbcTemplate::operator > (bool& value) {
 	Out_count++;
 	return *this;
 }
+QdbcTemplate & QdbcTemplate::Validation_collection(char * sql)
+{
+	int len = strlen(sql);
+	if (len > QMaxLength_Qresults) {
+		assert_args("error out of QMaxLength_Qresults");
+	}
+
+	//this->Va_data = QString(sql);
+	this->isUseUnion = true;
+	analysis_macro(sql);
+	return *this;
+}
 bool QdbcTemplate::getDabaseConnect()
 {
 	this->select("select 1");
@@ -527,22 +751,26 @@ bool QdbcTemplate::getDabaseConnect()
 bool QdbcTemplate::invokefunc(QObject * value, QByteArray name, QVariant & t)
 {
 	QByteArray gets = "get" % name;
-	QByteArray getss = "get" %name % "()";
-	char* gets_ptr = getss.data();
-	const QMetaObject* theMetaObject = value->metaObject();
-	for (int i = 5; i < theMetaObject->methodCount(); i++)
-	{
-		QMetaMethod oneMethod = theMetaObject->method(i);
-		if (strcmp(gets_ptr, oneMethod.methodSignature()) == 0) {
-			/*	qDebug() << "typeName: " << oneMethod.typeName();
-				qDebug() << "signature: " << oneMethod.methodSignature();
-				qDebug() << "methodType: " << oneMethod.methodType();;
-				qDebug() << "parameterNames: " << oneMethod.parameterNames() << "\n";*/
-			gets_ptr = (char*)oneMethod.typeName();
-			break;
-		}
+	char* gets_ptr;
+	QByteArray getname = "__getretrunname__" % name;
+	QMetaObject::invokeMethod(value, getname, Q_RETURN_ARG(char*, gets_ptr));
 
-	}
+	//QByteArray getss = "get" %name % "()";
+	//char* gets_ptr = getss.data();
+	//const QMetaObject* theMetaObject = value->metaObject();
+	//for (int i = 5; i < theMetaObject->methodCount(); i++)
+	//{
+	//	QMetaMethod oneMethod = theMetaObject->method(i);
+	//	if (strcmp(gets_ptr, oneMethod.methodSignature()) == 0) {
+	//		/*	qDebug() << "typeName: " << oneMethod.typeName();
+	//			qDebug() << "signature: " << oneMethod.methodSignature();
+	//			qDebug() << "methodType: " << oneMethod.methodType();;
+	//			qDebug() << "parameterNames: " << oneMethod.parameterNames() << "\n";*/
+	//		gets_ptr = (char*)oneMethod.typeName();
+	//		break;
+	//	}
+
+	//}
 	QString str = QString(gets_ptr);
 
 	bool resfunc;
@@ -598,22 +826,25 @@ int QdbcTemplate::invokefunc(QObject * value, QByteArray& name,QByteArray& keyna
 	QByteArray arr =  funcName.mid(num,1);
 	flag = arr.toInt();
 
-	QByteArray  tablenamefunc = "__set"%keyname;
-	bool resfunc = QMetaObject::invokeMethod(value, tablenamefunc);
-	flag = 1;
+	/*QByteArray  tablenamefunc = "__set"%keyname;
+	bool resfunc = QMetaObject::invokeMethod(value, tablenamefunc);*/
 	return flag;
 }
-QObject * QdbcTemplate::invokefunc(QObject * value,QByteArray& keyname, int index)
+QObject * QdbcTemplate::get_invokefunc(QObject * value,QByteArray& keyname, int index)
 {
 	QObject* retVal = NULL; 
-	if (index == -1) {
-		QByteArray tablename = keyname;
-		QByteArray tablenamefunc = "__get"%tablename;
-
-		bool resfunc = QMetaObject::invokeMethod(value, tablenamefunc, Q_RETURN_ARG(QObject*, retVal));
-	}
+	QByteArray tablename = keyname;
+	QByteArray tablenamefunc = "__get"%tablename; 
+	bool resfunc = QMetaObject::invokeMethod(value, tablenamefunc, Q_RETURN_ARG(QObject*, retVal), Q_ARG(int,index));
 	return retVal;
 	//return resfunc;
+}
+void QdbcTemplate::set_invokefunc(QObject * value, QByteArray & keyname)
+{
+	QObject* retVal = NULL;
+	QByteArray tablename = keyname;
+	QByteArray tablenamefunc = "__set"%tablename;
+	bool resfunc = QMetaObject::invokeMethod(value, tablenamefunc);
 }
 void QdbcTemplate::QdbcTemplateClear()
 {

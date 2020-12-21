@@ -294,7 +294,7 @@ void transactionaltest()
 | ----------------------------------------- | ------------------------------------------------------------ |
 | Laneip lane 或者 lane* lane  = new Lane() | Laneip lane 或者 Laneip* lane = new Laneip()或者Laneip* lane=NULL或者QList<Laneip*> lane |
 
-​		 
+​		  **对于 Laneip* lane = NULL而言，Qclear()会清楚此内存。但对于 Laneip* lane = new Laneip()不会清理内存，请手动释放**
 
 ## 4,工具类：	Object_utils
 
@@ -307,7 +307,8 @@ Object_utils 此类将有三个静态成员函数分别为：
 	static void clear(T& data)
 	static void clear(T* & data)
 	static bool isNULL(T& data)
-	static bool isClear(T& data)																				
+	static bool isClear(T& data)
+    static bool compare(T& data)    
 ```
 
 1. 对于static QString toString(T* src)   )静态成员函数而言，返回的是定义orm类字符串格式化的内容,以"["开头，“]”结尾，中间为类成员咱开。
@@ -348,6 +349,7 @@ Object_utils 此类将有三个静态成员函数分别为：
  	5. 对于static void clear(T* & data)静态成员函数而言，为清除指针类型orm的对象。
  	6. 对于static bool isNULL(T& data) 静态成员函数而言，判断引用的orm类型是否为空，与静态成员函数isClear的返回值正好相反
  	7. 对于static bool isClear(T& data) 静态成员函数而言，判断引用的orm类型是否为被清除，与静态成员函数isNULL的返回值正好相反
+   	8. 对于static bool compare(T& data) 静态成员函数而言，判断引用的orm类属性是否相同，相同返回true,不同为false
 
 ## 5,配置文件：qjbctemplate.ini
 
@@ -367,15 +369,24 @@ Object_utils 此类将有三个静态成员函数分别为：
 		[TEMPLATE]
 		Loglevel=1		#日志水平，0代表全输出，1代表不输出
 		automemory=ture	#如果为true,则有Qdbc来管理动态分配的内存，如果false则手动管理内存，Qclear宏将无效。
-		version=20.09.014c		#版本既可以在配置文件看，也可以在Qdbc.h中查看
+		version=x.x.xc		#版本既可以在配置文件看，也可以在Qdbc.h中查看,c为测试版本，s为稳定版
 
 		[pool]
 		initialPoolSize=4	#线程池的个数，暂时只支持默认的线程池，如需扩展，等待后续开发
 ```
 
-## 6,结束
+## 6,版本说明
 
-​	
+- 20.09版本：此为qdbc的第一个版本，增加了工具类Object_utils，可以通过配置文件看到版本号。
+- 20.10版本：优化了程序的性能，解决了一部分内存泄漏问题，对于Readme的修订。增加了了Object_utils::compare的功能。提供了对于关联查询的支持。
+
+
+
+
+
+
+
+***写在最后：***
 
 ​	希望大家提供大量的测试案列，此版暂定为测试版本，谢谢大家支持。如有bug，请在Issues中提问，或者联系邮箱1104559085@qq.com  。
 

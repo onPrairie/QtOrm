@@ -35,6 +35,27 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Qdbc\analysis_container.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Qdbc\Database_operator_template.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Qdbc\Datebase_pool_tmeplate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Qdbc\IDatabase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Qdbc\Object_qdbc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Qdbc\QdbcFactory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Qdbc\QTemplateThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="GeneratedFiles\Debug\moc_Datebase_pool_tmeplate.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
@@ -59,27 +80,6 @@
     <ClCompile Include="GeneratedFiles\Release\moc_QdbcFactory.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
-    <ClCompile Include="Qdbc\analysis_container.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Qdbc\Database_operator_template.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Qdbc\Datebase_pool_tmeplate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Qdbc\IDatabase.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Qdbc\Object_qdbc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Qdbc\QdbcFactory.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Qdbc\QTemplateThread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\analysis_container.h">
@@ -91,7 +91,13 @@
     <ClInclude Include="include\Qdbc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\QTemplateThread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="include\qtormlib_global.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\QdbcConfig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -106,9 +112,6 @@
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="include\QdbcFactory.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="include\QTemplateThread.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>

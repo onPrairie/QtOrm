@@ -1,4 +1,4 @@
-#include "../include/Object_qdbc.h"
+//#include "../include/Object_qdbc.h"
 #include <QDebug>
 #include <QTime>
 #include <QSettings>
@@ -181,6 +181,17 @@ void QdbcTemplate::analysis_macro(char* str)
 				char tmp[QMaxLength_field] = { 0 };
 				memcpy(tmp, &str[v_start], i - v_start);
 				parent_names = QString(tmp).trimmed();
+				//if (parent_names != "0") {
+				//	QString col = "__"%parent_names;
+				//	ElemsXml el; // = new ElemsXml;
+				//	el.property_name = col;
+				//	el.parent = parent_names;
+				//	//el.value = NULL;
+				//	el.level = level;
+				//	el.isId = false;
+				//	el.id_value = "";
+				//	tablenames[col] = el;
+				//}
 				parentls.append(parent_names);
 				//QString str = QString()
 				i++;
@@ -221,11 +232,10 @@ void QdbcTemplate::analysis_macro(char* str)
 				ElemsXml el; // = new ElemsXml;
 				el.property_name = QString(tmp).trimmed();
 				el.parent = parent_names;
+				//el.value = NULL;
 				el.level = level;
-				el.flag = flag;
 				el.isId = isid;
 				el.id_value = "";
-				el.value = NULL;
 				tablenames[col] = el;
 				if (h.contains(parent_names)) {
 					//h[col] = h[parent_names];
@@ -235,7 +245,7 @@ void QdbcTemplate::analysis_macro(char* str)
 					ElemsXmlObj* obj = new ElemsXmlObj;
 					obj->parents = parentls;
 					obj->value = NULL;
-					h[el.parent] = obj;
+					h[parent_names] = obj;
 				}
 				
 			}
@@ -724,8 +734,6 @@ QdbcTemplate & QdbcTemplate::Validation_collection(char * sql)
 	if (len > QMaxLength_Qresults) {
 		assert_args("error out of QMaxLength_Qresults");
 	}
-
-	//this->Va_data = QString(sql);
 	this->isUseUnion = true;
 	analysis_macro(sql);
 	return *this;
@@ -830,6 +838,17 @@ int QdbcTemplate::invokefunc(QObject * value, QByteArray& name,QByteArray& keyna
 	bool resfunc = QMetaObject::invokeMethod(value, tablenamefunc);*/
 	return flag;
 }
+int QdbcTemplate::get_invokefunc_type(QObject * value, QByteArray & keyname)
+{
+	int ret = -1;
+	QByteArray tablename = keyname;
+	QByteArray tablenamefunc = "__getmembertype__"%tablename;
+	bool resfunc = QMetaObject::invokeMethod(value, tablenamefunc, Q_RETURN_ARG(int, ret));
+	if (resfunc == false) {
+		assert_args("err invoke:" + QString(tablenamefunc));
+	}
+	return ret;
+}
 QObject * QdbcTemplate::get_invokefunc(QObject * value,QByteArray& keyname, int index)
 {
 	QObject* retVal = NULL; 
@@ -845,6 +864,9 @@ void QdbcTemplate::set_invokefunc(QObject * value, QByteArray & keyname)
 	QByteArray tablename = keyname;
 	QByteArray tablenamefunc = "__set"%tablename;
 	bool resfunc = QMetaObject::invokeMethod(value, tablenamefunc);
+	if (resfunc == false) {
+		assert_args("err invoke:"+  QString(tablenamefunc));
+	}
 }
 void QdbcTemplate::QdbcTemplateClear()
 {

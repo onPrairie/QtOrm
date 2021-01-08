@@ -1,3 +1,13 @@
+/****************************************************************************
+**
+** Copyright (C) 2020  The Qdbc Authors. All rights reserved.
+** Contact: linuxguangbo@foxmail.com
+**
+** This file is part of the Qdbc module of the Qdbc  Toolkit.
+** Supported protocols£ºApache License 2.0
+** Software protocol view license file
+** Please refer to the readme file for instructions
+****************************************************************************/
 #pragma once
 #define  QMaxLength_Qresults 1024
 #define  QMaxLength_field  100

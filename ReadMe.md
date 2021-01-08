@@ -25,7 +25,7 @@
 4. 导入laneip表（网络检测表），数据库一定要utf-8格式，测试的数据表如下
 
    ```
-   CREATE TABLE NewTable (
+   CREATE TABLE Laneip (
    id  int(11) NOT NULL AUTO_INCREMENT ,
    ip  varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ,
    port  varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL ,
@@ -45,9 +45,9 @@
 
    表结构解释：
 
-   | id          | 默认自增长                                                   |
-   | :---------- | :----------------------------------------------------------- |
    | 字段名      | 描述                                                         |
+   | :---------- | :----------------------------------------------------------- |
+   | id          | 默认自增长                                                   |
    | ip          | 网站的ip                                                     |
    | port        | 网站的端口                                                   |
    | url         | 网站的url                                                    |
@@ -60,7 +60,7 @@
 
 ```c
 		#include <QtCore/QCoreApplication>
-		#include "Qdbc\Qdbc.h"
+		#include "dbc.h"
 		int main(int argc, char *argv[])
 		{
 			QCoreApplication a(argc, argv);
@@ -226,9 +226,83 @@ void transactionaltest()
 			qDebug() << QDBC_Id << Object_utils::toString(lanelist);
 		}
 ```
+12. **Qresults 宏使用**
+
+    1. 此宏需要配合@result_Id，@result，@one，@many
+
+    2. #define result_Id(column,...)   此为定义id的属性，column定义为数据库列名，如果填充属性，则为自定义属性，否则为数据库列名跟属性名字相同
+
+    3. #define result(column,...)  此为定义类的属性，column定义为数据库列名，如果填充属性，则为自定义属性，否则为数据库列名跟属性名字相同
+
+    4. #define one(classname,...)  此为定义关联的类，classname为类名，可以跟属性形成多级嵌套，关联为对象或链表（只为Qlist）时使用此宏
+
+       ```c++
+       class Laneipch : public QObject
+       {
+       	Q_OBJECT
+       public:
+       		Q_ATTR(int, id)
+       		Q_ATTR(QString, url)
+       };
+       class Laneip :public QObject
+       {
+       	Q_OBJECT
+       public:
+       		Q_ATTR(int, id)
+       		Q_ATTR(QString, ip)
+       		Q_ATTR(int, port)
+       		Q_ATTR(QString, url)
+       		Q_ATTR(QString, entryno)
+       		Q_ATTR(int, etype)
+       		Q_ATTR(int, Status)
+       		Q_ATTR(QString, description)
+       		Q_ATTR(QDateTime, updatetime)
+       		Q_ASSOCIATION_OBJECT(Laneipch)
+       };
+       class Place : public QObject
+       {
+       	Q_OBJECT
+       public:
+       	Q_ATTR(int, id)
+       	Q_ATTR(QString, name)
+       	Q_ATTR(QString, area)
+       	Q_ASSOCIATION_OBJECT(Laneipch)
+       };
+       ```
+
+       
+
+       ```c
+       void unionselect()
+       {	
+       	QList<Place*> pl ;
+       	QString str = "SELECT pl.id as pid,pl.`name`, pl.area,l.id,l.ip,l.url,l.entryno,ch.id as chid,ch.url as urls \
+       		from  laneip  L, place pl, laneipchild ch  WHERE l.etype = pl.id and pl.id = ch.id ORDER BY pid asc";
+       	Qselect(str) < Qresults(
+       		@result_Id(pid, id),
+       		@result(name),
+       		@result(area),
+       		@one(Laneip, {
+       			@result_Id(id),
+       			@result(ip),
+       			@result(url),
+       			@result(entryno),
+       		}),
+       		@one(Laneipch, {
+       			@result_Id(chid,id),
+       			@result(urls,url),
+       		})
+       		) > pl;
+       		Qclear();
+       }
+       ```
+
+       
+
 ## 3,orm 类定义
 
 1. 假设定义的类型为Laneip,想将类映射到数据库，那就要将类定义成如下格式：
+2. 从20.10版本以后需要加上头文件 #include "QdbcConfig.h"
 
 ```c
 		class Laneip :public QObject
@@ -239,7 +313,7 @@ void transactionaltest()
 			Q_ATTR(QString, ip)
 			Q_ATTR(int, port)
 			Q_ATTR(QString,url)
-			Q_ATTR(QString,entryno)
+			Q_ATTR(int,entryno)
 			Q_ATTR(int,etype)
 			Q_ATTR(int, Status)
 			Q_ATTR(QString, description)
@@ -251,9 +325,9 @@ void transactionaltest()
 2. 属性说明	
 
  - Q_ATTR(T,member)  用此宏属性为member，类型为T。定义的属性与数据库表字段一一对应，大小写敏感。
-
  - 此定义的类一定要继承于QObject，并且写上Q_OBJECT宏，不需要写构造函数。
-
+ - Q_ASSOCIATION_OBJECT(T2)   此宏用于关联一个对象，T2为一个对象类型，不可为指针
+ - Q_ASSOCIATION_LIST(T)   此宏用于关联一个链表，T2为一个链表中的对象类型，不可为指针
  - ATTR_ALIAS(T,alias,member) 如果不想与数据库对应名字，则需要别名来定义。alias为别名属性， member为数据库表字段，T表示类型
 
  > ​	别名属性:
@@ -294,7 +368,7 @@ void transactionaltest()
 | ----------------------------------------- | ------------------------------------------------------------ |
 | Laneip lane 或者 lane* lane  = new Lane() | Laneip lane 或者 Laneip* lane = new Laneip()或者Laneip* lane=NULL或者QList<Laneip*> lane |
 
-​		 
+​		  **对于 Laneip* lane = NULL而言，Qclear()会清楚此内存。但对于 Laneip* lane = new Laneip()不会清理内存，请手动释放**
 
 ## 4,工具类：	Object_utils
 
@@ -307,7 +381,8 @@ Object_utils 此类将有三个静态成员函数分别为：
 	static void clear(T& data)
 	static void clear(T* & data)
 	static bool isNULL(T& data)
-	static bool isClear(T& data)																				
+	static bool isClear(T& data)
+    static bool compare(T& data)    
 ```
 
 1. 对于static QString toString(T* src)   )静态成员函数而言，返回的是定义orm类字符串格式化的内容,以"["开头，“]”结尾，中间为类成员咱开。
@@ -348,6 +423,7 @@ Object_utils 此类将有三个静态成员函数分别为：
  	5. 对于static void clear(T* & data)静态成员函数而言，为清除指针类型orm的对象。
  	6. 对于static bool isNULL(T& data) 静态成员函数而言，判断引用的orm类型是否为空，与静态成员函数isClear的返回值正好相反
  	7. 对于static bool isClear(T& data) 静态成员函数而言，判断引用的orm类型是否为被清除，与静态成员函数isNULL的返回值正好相反
+      	8. 对于static bool compare(T& data) 静态成员函数而言，判断引用的orm类属性是否相同，相同返回true,不同为false
 
 ## 5,配置文件：qjbctemplate.ini
 
@@ -367,15 +443,24 @@ Object_utils 此类将有三个静态成员函数分别为：
 		[TEMPLATE]
 		Loglevel=1		#日志水平，0代表全输出，1代表不输出
 		automemory=ture	#如果为true,则有Qdbc来管理动态分配的内存，如果false则手动管理内存，Qclear宏将无效。
-		version=20.09.014c		#版本既可以在配置文件看，也可以在Qdbc.h中查看
+		version=x.x.xc		#版本既可以在配置文件看，也可以在Qdbc.h中查看,c为测试版本，s为稳定版
 
 		[pool]
 		initialPoolSize=4	#线程池的个数，暂时只支持默认的线程池，如需扩展，等待后续开发
 ```
 
-## 6,结束
+## 6,版本说明
 
-​	
+- 20.09版本：此为qdbc的第一个版本，增加了工具类Object_utils，可以通过配置文件看到版本号。
+- 20.10版本：优化了程序的性能，解决了一部分内存泄漏问题，对于Readme的修订。增加了了Object_utils::compare的功能。提供了对于关联查询的支持。支持关联查询，增加了QdbcConfig的头文件，与之前的Qdbc头文件进行分离
+
+
+
+
+
+
+
+***写在最后：***
 
 ​	希望大家提供大量的测试案列，此版暂定为测试版本，谢谢大家支持。如有bug，请在Issues中提问，或者联系邮箱1104559085@qq.com  。
 
